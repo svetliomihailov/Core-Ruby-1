@@ -41,7 +41,19 @@ module MyEnumerable
   end
 
   def each_cons(n)
-    
+    if block_given?
+      enum = self.each
+      begin        
+        enum.each do 
+          array = []
+          n.times { array << enum.next }
+          yield array
+        end
+      rescue
+        return nil
+      end
+    end
+    nil
   end
 
   def include?(element)
