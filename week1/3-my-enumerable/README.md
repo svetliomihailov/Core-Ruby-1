@@ -38,6 +38,10 @@ module MyEnumerable
     # Your code goes here.
   end
 
+  def one?
+    # Your code goes here.
+  end
+
   def all?
     # Your code goes here.
   end
@@ -61,8 +65,60 @@ module MyEnumerable
   def size
     # Your code goes here.
   end
+
+  # Groups the collection by result of the block.
+  # Returns a hash where the keys are the evaluated
+  # result from the block and the values are arrays
+  # of elements in the collection that correspond to
+  # the key.
+  def group_by
+  end
+
+  def min
+    # Your code goes here.
+  end
+
+  def min_by
+    # Your code goes here.
+  end
+
+  def max
+    # Your code goes here.
+  end
+
+  def max_by
+    # Your code goes here.
+  end
+
+  def minmax
+    # Your code goes here.
+  end
+
+  def minmax_by
+    # Your code goes here.
+  end
+
+  def take(n)
+    # Your code goes here.
+  end
+
+  def take_while
+    # Your code goes here.
+  end
+
+  def drop(n)
+    # Your code goes here.
+  end
+
+  def drop_while
+    # Your code goes here.
+  end
 end
 ```
+
+## Enumerator
+
+Return an iterator for the method, if no block is given.
 
 ## Aliases
 
@@ -74,3 +130,14 @@ with different names.
 #filter -> #select
 #reduce -> #foldl
 ```
+
+## Strict
+
+As a bigger challenge, try to strictly follow Enumerable. For example if no
+initial element is given to `#reduce` Ruby's Enumerable will take the first one
+of the collection as the initial value.
+
+This is what makes `(1..10).reduce { |sum, n| sum + n }` work. Consult with
+[rubyspec][] to better mimic Ruby's Enumerable behaviour.
+
+[rubyspec]: https://github.com/rubyspec/rubyspec/tree/7fb7465aac1ec8e2beffdfa9053758fa39b443a5/core/enumerable
