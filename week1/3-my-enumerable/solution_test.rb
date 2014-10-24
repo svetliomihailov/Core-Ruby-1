@@ -17,37 +17,34 @@ class SolutionTest < Minitest::Test
 
   def test_map
     collection = Collection.new(*1..5)
-    enum = collection.enum_for(:each)
 
     assert_equal [2, 3, 4, 5, 6], collection.map(&:succ)
     assert_equal [6, 7, 8, 9, 10], collection.map { |e| e + 5 }
-    assert_equal enum.inspect, collection.map.inspect
+    assert_equal true, collection.map.is_a?(Enumerator)
 
     assert_equal [2, 3, 4, 5, 6], collection.collect(&:succ)
     assert_equal [6, 7, 8, 9, 10], collection.collect { |e| e + 5 }
-    assert_equal enum.inspect, collection.collect.inspect
+    assert_equal true, collection.collect.is_a?(Enumerator)
   end
 
   def test_filter
     collection = Collection.new(*1..10)
-    enum = collection.enum_for(:each)
 
     assert_equal [1, 3, 5, 7, 9], collection.filter(&:odd?)
     assert_equal [2, 4, 6, 8, 10], collection.filter(&:even?)
-    assert_equal enum.inspect, collection.filter.inspect
+    assert_equal true, collection.filter.is_a?(Enumerator)
 
     assert_equal [1, 3, 5, 7, 9], collection.select(&:odd?)
     assert_equal [2, 4, 6, 8, 10], collection.select(&:even?)
-    assert_equal enum.inspect, collection.select.inspect
+    assert_equal true, collection.select.is_a?(Enumerator)
   end
 
   def test_reject
     collection = Collection.new(*1..10)
-    enum = collection.enum_for(:each)
 
     assert_equal [1, 3, 5, 7, 9], collection.reject(&:even?)
     assert_equal [2, 4, 6, 8, 10], collection.reject(&:odd?)
-    assert_equal enum.inspect, collection.reject.inspect
+    assert_equal true, collection.reject.is_a?(Enumerator)
   end
 
   def test_reduce
@@ -115,7 +112,6 @@ class SolutionTest < Minitest::Test
   def test_each_cons
     collection = Collection.new(*1..5)
     array = []
-    enum = collection.enum_for(:each)
 
     collection.each_cons(2) { |e| array << e }
 
@@ -133,16 +129,15 @@ class SolutionTest < Minitest::Test
     assert_equal [3, 4, 5], array[2]
     assert_equal nil, array[3]
 
-    assert_equal enum.inspect, collection.each_cons(2).inspect
+    assert_equal true, collection.each_cons(2).is_a?(Enumerator)
   end
 
   def test_group_by
     collection = Collection.new(*1..6)
-    enum = collection.enum_for(:each)
 
     assert_equal({ 0=>[3, 6], 1=>[1, 4], 2=>[2, 5] }, collection.group_by { |i| i%3 })
     assert_equal({ 0=>[2, 4, 6], 1=>[1, 3, 5]}, collection.group_by { |i| i%2 })
-    assert_equal enum.inspect, collection.group_by.inspect
+    assert_equal true, collection.group_by.is_a?(Enumerator)
   end
 
   def test_min
@@ -155,11 +150,10 @@ class SolutionTest < Minitest::Test
 
   def test_min_by
     collection = Collection.new("albatross", "dog", "horse")
-    enum = collection.enum_for(:each)
 
     assert_equal("dog", collection.min_by { |a| a.length })
-    assert_equal enum.inspect, collection.min_by.inspect
-  end
+    assert_equal true, collection.min_by.is_a?(Enumerator)  
+  end  
 
   def test_max
     collection = Collection.new("albatross", "dog", "horse")
@@ -171,11 +165,10 @@ class SolutionTest < Minitest::Test
 
   def test_max_by
     collection = Collection.new("albatross", "dog", "horse")
-    enum = collection.enum_for(:each)
 
     assert_equal("albatross", collection.max_by { |a| a.length })
     assert_equal("horse", collection.max_by { |a| a })
-    assert_equal enum.inspect, collection.max_by.inspect
+    assert_equal true, collection.max_by.is_a?(Enumerator)
   end
 
   def test_take
@@ -187,10 +180,9 @@ class SolutionTest < Minitest::Test
 
   def test_take_while
     collection = Collection.new(*1..6)
-    enum = collection.enum_for(:each)    
 
     assert_equal [1, 2, 3], collection.take_while { |e| e < 4}
-    assert_equal enum.inspect, collection.take_while.inspect
+    assert_equal true, collection.take_while.is_a?(Enumerator)
   end
 
   def test_drop
@@ -199,13 +191,12 @@ class SolutionTest < Minitest::Test
     assert_equal [4, 5, 6], collection.drop(3)
     assert_equal [], collection.drop(8)
   end
-
+ 
   def test_drop_while
     collection = Collection.new(*1..6)
-    enum = collection.enum_for(:each)    
 
     assert_equal [4, 5, 6], collection.drop_while { |e| e < 4}
-    assert_equal enum.inspect, collection.drop_while.inspect
+    assert_equal true, collection.drop_while.is_a?(Enumerator)
   end
 
   def test_minmax
@@ -217,11 +208,10 @@ class SolutionTest < Minitest::Test
 
   def test_minmax_by
     collection = Collection.new("albatross", "dog", "horse")
-    enum = collection.enum_for(:each)
 
     assert_equal ["dog", "albatross"], collection.minmax_by { |x| x.length }
     assert_equal ["albatross", "horse"], collection.minmax_by { |x| x }
-    assert_equal enum.inspect, collection.minmax_by.inspect
+    assert_equal true, collection.minmax_by.is_a?(Enumerator)
   end
 
 end

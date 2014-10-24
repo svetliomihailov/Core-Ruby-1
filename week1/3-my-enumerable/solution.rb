@@ -49,7 +49,7 @@ module MyEnumerable
 
   def each_cons(n)
     return self.enum_for(:each) unless block_given?
-    enum, cnt = self.each, 0
+    enum, cnt = self.enum_for(:each){ size }, 0
     while cnt <= (enum.size - n)
       enum.rewind
       cnt.times { enum.next }
@@ -101,7 +101,7 @@ module MyEnumerable
   end
 
   def min
-    enum = self.each
+    enum = self.enum_for(:each) { size }
     cnt, min_val = enum.size, enum.next
     while cnt > 1
       cur = enum.next
@@ -118,7 +118,7 @@ module MyEnumerable
   end
 
   def max
-    enum = self.each
+    enum = self.enum_for(:each) { size }
     cnt, max_val = enum.size, enum.next
     while cnt > 1
       cur = enum.next
@@ -137,19 +137,15 @@ module MyEnumerable
   def minmax
     ar = []
     if block_given?
-      ar << self.min { |a, b| yield a, b }
-      ar << self.max { |a, b| yield a, b }
+      [self.min { |a, b| yield a, b }, self.max { |a, b| yield a, b }]
     else
-      ar << self.min
-      ar << self.max
+      [self.min, self.max]
     end
   end
 
   def minmax_by
-    return self.enum_for(:each) unless block_given?
-    ar = []
-    ar << self.min_by { |e| yield e }
-    ar << self.max_by { |e| yield e }
+    return self.enum_for(:each) unless block_given?    
+    [self.min_by { |e| yield e }, self.max_by { |e| yield e }]
   end
 
   def take(n)
