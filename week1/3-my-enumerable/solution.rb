@@ -1,55 +1,60 @@
 module MyEnumerable
   def map
-    return self.enum_for(:each) unless block_given?
+    return enum_for(:each) unless block_given?
     array = []
-    self.each { |el| array << yield(el) }
+    each { |el| array << yield(el) }
     array
   end
 
   def filter
-    return self.enum_for(:each) unless block_given?
+    return enum_for(:each) unless block_given?
     array = []
-    self.each { |el| array << el if yield(el) }
+    each { |el| array << el if yield(el) }
     array
   end
 
   def reject
-    return self.enum_for(:each) unless block_given?
+    return enum_for(:each) unless block_given?
     array = []
-    self.each { |el| array << el unless yield el }
+    each { |el| array << el unless yield el }
     array
   end
 
   def reduce(initial = nil)
-    #if initial.nil?
-      # TODO: finish this method...
-    #else
-    self.each { | el | initial = yield initial, el } if block_given?
+    enum, cnt = enum_for(:each) { size }, 0
+    initial, cnt = enum.next, 1 if initial.nil?
+    while cnt < enum.size
+      if block_given?
+        initial = yield initial, enum.next
+      else
+        break
+      end
+      cnt += 1
+    end
     initial
-    #end
   end
 
   def any?
     if block_given?
-      self.each { |el| return true if yield el }
+      each { |el| return true if yield el }
     else
-      self.each { |el| return true if el }
+      each { |el| return true if el }
     end
     false
   end
 
   def all?
     if block_given?
-      self.each { |el| return false unless yield el }
+      each { |el| return false unless yield el }
     else
-      self.each { |el| return false unless el }
+      each { |el| return false unless el }
     end
     true
   end
 
   def each_cons(n)
-    return self.enum_for(:each) unless block_given?
-    enum, cnt = self.enum_for(:each){ size }, 0
+    cnt, enum = 0, enum_for(:each) { size }
+    return enum unless block_given?
     while cnt <= (enum.size - n)
       enum.rewind
       cnt.times { enum.next }
@@ -61,16 +66,16 @@ module MyEnumerable
   end
 
   def include?(element)
-    self.each { |el| return true if el == element }
+    each { |el| return true if el == element }
     false
   end
 
   def count(element = nil)
     cnt = 0
     if element
-      self.each { |e| cnt += 1 if element == e }
+      each { |e| cnt += 1 if element == e }
     else
-      self.each do |e|
+      each do |e|
         should_inc =  block_given? ? yield(e) : true
         cnt += 1 if should_inc
       end
@@ -80,7 +85,7 @@ module MyEnumerable
 
   def size
     cnt = 0
-    self.each { cnt += 1 }
+    each { cnt += 1 }
     cnt
   end
 
@@ -90,9 +95,9 @@ module MyEnumerable
   # of elements in the collection that correspond to
   # the key.
   def group_by
-    return self.enum_for(:each) unless block_given?
+    return enum_for(:each) unless block_given?
     hash = Hash.new([])
-    self.each do |e|
+    each do |e|
       res = yield e
       hash[res] = Array.new unless hash.key?(res)
       hash[res] << e
@@ -101,7 +106,7 @@ module MyEnumerable
   end
 
   def min
-    enum = self.enum_for(:each) { size }
+    enum = enum_for(:each) { size }
     cnt, min_val = enum.size, enum.next
     while cnt > 1
       cur = enum.next
@@ -113,12 +118,12 @@ module MyEnumerable
   end
 
   def min_by
-    return self.enum_for(:each) unless block_given?
-    self.min { |a, b| yield(a) <=> yield(b) }
+    return enum_for(:each) unless block_given?
+    min { |a, b| yield(a) <=> yield(b) }
   end
 
   def max
-    enum = self.enum_for(:each) { size }
+    enum = enum_for(:each) { size }
     cnt, max_val = enum.size, enum.next
     while cnt > 1
       cur = enum.next
@@ -130,27 +135,26 @@ module MyEnumerable
   end
 
   def max_by
-    return self.enum_for(:each) unless block_given?
-    self.max { |a, b| yield(a) <=> yield(b) }
+    return enum_for(:each) unless block_given?
+    max { |a, b| yield(a) <=> yield(b) }
   end
 
   def minmax
-    ar = []
     if block_given?
-      [self.min { |a, b| yield a, b }, self.max { |a, b| yield a, b }]
+      [min { |a, b| yield a, b }, max { |a, b| yield a, b }]
     else
-      [self.min, self.max]
+      [min, max]
     end
   end
 
   def minmax_by
-    return self.enum_for(:each) unless block_given?    
-    [self.min_by { |e| yield e }, self.max_by { |e| yield e }]
+    return enum_for(:each) unless block_given?
+    [min_by { |e| yield e }, max_by { |e| yield e }]
   end
 
   def take(n)
     ar, cnt = [], 0
-    self.each do | el |
+    each do | el |
       ar << el
       cnt += 1
       return ar if cnt == n
@@ -159,12 +163,12 @@ module MyEnumerable
   end
 
   def take_while
-    return self.enum_for(:each) unless block_given?
+    return enum_for(:each) unless block_given?
     ar = []
-    self.each do | e |
+    each do | e |
       if yield(e)
-        ar << e 
-      else 
+        ar << e
+      else
         return ar
       end
     end
@@ -172,16 +176,19 @@ module MyEnumerable
   end
 
   def drop(n)
-    return [] if n >= self.size
+    return [] if n >= size
     ar, cnt = [], 0
-    self.each { |e| cnt += 1; ar << e if cnt > (self.size - n) }
+    each do |e|
+      cnt += 1
+      ar << e if cnt > (size - n)
+    end
     ar
   end
 
   def drop_while
-    return self.enum_for(:each) unless block_given?
+    return enum_for(:each) unless block_given?
     ar = []
-    self.each { | e | ar << e unless yield e }
+    each { | e | ar << e unless yield e }
     ar
   end
 

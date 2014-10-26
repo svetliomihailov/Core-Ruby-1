@@ -75,71 +75,42 @@ class Vector
   end
 
   def to_s
-    @components.to_s
+    str = '('
+    @components.each { |e| str += e.to_s + ', ' }
+    str.chomp!(', ')
+    str += ')'
   end
 
   def inspect
-    @components.to_s
+    '#Vector:' + to_s
   end
 end
 
-class Vector2D
-  attr_accessor :x, :y
-
+class Vector2D < Vector
   def initialize(x, y)
-    @x, @y = x.to_f, y.to_f
+    @components, @dimension = [], 2
+    @components << x.to_f
+    @components << y.to_f
   end
 
-  def ==(other)
-    if other.is_a? Vector2D
-      @x == other.x && @y == other.y
-    else
-      false
-    end
+  def x
+    @components[0]
   end
 
-  def +(other)
-    if other.is_a? Numeric
-      Vector2D.new @x + other, @y + other
-    elsif other.is_a? Vector2D
-      Vector2D.new @x + other.x, @y + other.y
-    else
-      fail 'Illegal Argument'
-    end
+  def x=(value)
+    @components[0] = value
   end
 
-  def -(other)
-    if other.is_a? Numeric
-      Vector2D.new @x - other, @y - other
-    elsif other.is_a? Vector2D
-      Vector2D.new @x - other.x, @y - other.y
-    else
-      fail 'Illegal Argument'
-    end
+  def y
+    @components[1]
   end
 
-  def *(other)
-    if other.is_a? Numeric
-      Vector2D.new @x * other, @y * other
-    else
-      fail 'Illegal Argument'
-    end
+  def y=(value)
+    @components[1] = value
   end
 
-  def /(other)
-    if other.is_a? Numeric
-      Vector2D.new @x / other, @y / other
-    else
-      fail 'Illegal Argument'
-    end
-  end
-
-  def +@
-    Vector2D.new(+@x, +@y)
-  end
-
-  def -@
-    Vector2D.new(-@x, -@y)
+  def inspect
+    '#Vector2D:' + to_s
   end
 
   def self.i
@@ -149,31 +120,7 @@ class Vector2D
   def self.j
     Vector2D.new 0, 1
   end
-
-  def inspect
-    "#{@x},#{@y}"
-  end
-
-  def to_s
-    "#{@x},#{@y}"
-  end
 end
-
-# class Vector2D < Vector
-#   def initialize(x, y)
-#     @components, @dimension = [], 2
-#     @components << x.to_f
-#     @components << y.to_f
-#   end
-#
-#   def self.i
-#     Vector2D.new 1, 0
-#   end
-#
-#   def self.j
-#     Vector2D.new 0, 1
-#   end
-# end
 
 class Vector3D < Vector
   def initialize(x, y, z)
@@ -181,5 +128,33 @@ class Vector3D < Vector
     @components << x.to_f
     @components << y.to_f
     @components << z.to_f
+  end
+
+  def x
+    @components[0]
+  end
+
+  def x=(value)
+    @components[0] = value
+  end
+
+  def y
+    @components[1]
+  end
+
+  def y=(value)
+    @components[1] = value
+  end
+
+  def z
+    @components[2]
+  end
+
+  def z=(value)
+    @components[2] = value
+  end
+
+  def inspect
+    '#Vector3D:' + to_s
   end
 end

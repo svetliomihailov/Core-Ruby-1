@@ -21,10 +21,6 @@ class SolutionTest < Minitest::Test
     assert_equal [2, 3, 4, 5, 6], collection.map(&:succ)
     assert_equal [6, 7, 8, 9, 10], collection.map { |e| e + 5 }
     assert_equal true, collection.map.is_a?(Enumerator)
-
-    assert_equal [2, 3, 4, 5, 6], collection.collect(&:succ)
-    assert_equal [6, 7, 8, 9, 10], collection.collect { |e| e + 5 }
-    assert_equal true, collection.collect.is_a?(Enumerator)
   end
 
   def test_filter
@@ -33,10 +29,6 @@ class SolutionTest < Minitest::Test
     assert_equal [1, 3, 5, 7, 9], collection.filter(&:odd?)
     assert_equal [2, 4, 6, 8, 10], collection.filter(&:even?)
     assert_equal true, collection.filter.is_a?(Enumerator)
-
-    assert_equal [1, 3, 5, 7, 9], collection.select(&:odd?)
-    assert_equal [2, 4, 6, 8, 10], collection.select(&:even?)
-    assert_equal true, collection.select.is_a?(Enumerator)
   end
 
   def test_reject
@@ -49,12 +41,14 @@ class SolutionTest < Minitest::Test
 
   def test_reduce
     collection = Collection.new(*1..10)
+    collection_2 = Collection.new(*1..2)
+    collection_3 = Collection.new(*1..1)
 
-    assert_equal 55, collection.reduce(0) { |sum, n| sum + n }
-    assert_equal 65, collection.reduce(0) { |sum, n| sum + n + 1 }
-
-    assert_equal 55, collection.foldl(0) { |sum, n| sum + n }
-    assert_equal 65, collection.foldl(0) { |sum, n| sum + n + 1 }
+    assert_equal 1, collection_3.reduce { |a, e| a + e }
+    assert_equal 3, collection_2.reduce { |a, e| a + e }
+    assert_equal 55, collection.reduce(0) { |a, e| a + e }
+    assert_equal 55, collection.reduce { |a, e| a + e }
+    assert_equal 1, collection.reduce
   end
 
   def test_include?
@@ -69,11 +63,11 @@ class SolutionTest < Minitest::Test
     collection2 = Collection.new(false, nil, false)
     collection3 = Collection.new(false, nil, false, 1)
 
-    assert_equal (true), (collection.any? {|e| e > 0})
-    assert_equal (false), (collection.any? {|e| e < 0})
-    assert_equal (true), (collection.any? )
-    assert_equal (false), (collection2.any? )
-    assert_equal (true), (collection3.any? )
+    assert_equal(true, collection.any? { |e| e > 0 })
+    assert_equal(false, collection.any? { |e| e < 0 })
+    assert_equal(true, collection.any?)
+    assert_equal(false, collection2.any?)
+    assert_equal(true, collection3.any?)
   end
 
   def test_all?
@@ -81,15 +75,15 @@ class SolutionTest < Minitest::Test
     collection2 = Collection.new(*0..6)
     collection3 = Collection.new(1, false, 0, 4, 5, 6)
 
-    assert_equal(true, collection.all? {|e| e > 0})
-    assert_equal(false, collection2.all? {|e| e > 0})
+    assert_equal(true, collection.all? { |e| e > 0 })
+    assert_equal(false, collection2.all? { |e| e > 0 })
     assert_equal(true, collection2.all?)
     assert_equal(false, collection3.all?)
   end
 
   def test_size
     col = Collection.new
-    col_1 = Collection.new(1,2)
+    col_1 = Collection.new(1, 2)
     col_2 = Collection.new([1, 2, 3], 2)
 
     assert_equal 0, col.size
@@ -105,8 +99,8 @@ class SolutionTest < Minitest::Test
     assert_equal 1, collection.count(9)
     assert_equal 10, collection.count(nil)
     assert_equal 3, collection_2.count(4)
-    assert_equal 5, collection_2.count { |e| e > 1}
-    assert_equal 3, collection_2.count { |e| e == 4}
+    assert_equal 5, collection_2.count { |e| e > 1 }
+    assert_equal 3, collection_2.count { |e| e == 4 }
   end
 
   def test_each_cons
@@ -135,39 +129,41 @@ class SolutionTest < Minitest::Test
   def test_group_by
     collection = Collection.new(*1..6)
 
-    assert_equal({ 0=>[3, 6], 1=>[1, 4], 2=>[2, 5] }, collection.group_by { |i| i%3 })
-    assert_equal({ 0=>[2, 4, 6], 1=>[1, 3, 5]}, collection.group_by { |i| i%2 })
+    assert_equal({ 0 => [3, 6], 1 => [1, 4], 2 => [2, 5] }, \
+                 collection.group_by { |i| i % 3 })
+    assert_equal({ 0 => [2, 4, 6], 1 => [1, 3, 5] },
+                 collection.group_by { |i| i % 2 })
     assert_equal true, collection.group_by.is_a?(Enumerator)
   end
 
   def test_min
-    collection = Collection.new("albatross", "dog", "horse")
+    collection = Collection.new('albatross', 'dog', 'horse')
 
-    assert_equal "dog", collection.min { |a, b| a.length <=> b.length }
-    assert_equal "albatross", collection.min { |a, b| a <=> b }
-    assert_equal "albatross", collection.min
+    assert_equal 'dog', collection.min { |a, b| a.length <=> b.length }
+    assert_equal 'albatross', collection.min { |a, b| a <=> b }
+    assert_equal 'albatross', collection.min
   end
 
   def test_min_by
-    collection = Collection.new("albatross", "dog", "horse")
+    collection = Collection.new('albatross', 'dog', 'horse')
 
-    assert_equal("dog", collection.min_by { |a| a.length })
-    assert_equal true, collection.min_by.is_a?(Enumerator)  
-  end  
+    assert_equal('dog', collection.min_by(&:length))
+    assert_equal true, collection.min_by.is_a?(Enumerator)
+  end
 
   def test_max
-    collection = Collection.new("albatross", "dog", "horse")
+    collection = Collection.new('albatross', 'dog', 'horse')
 
-    assert_equal "albatross", collection.max { |a, b| a.length <=> b.length }
-    assert_equal "horse", collection.max { |a, b| a <=> b }
-    assert_equal "horse", collection.max
+    assert_equal 'albatross', collection.max { |a, b| a.length <=> b.length }
+    assert_equal 'horse', collection.max { |a, b| a <=> b }
+    assert_equal 'horse', collection.max
   end
 
   def test_max_by
-    collection = Collection.new("albatross", "dog", "horse")
+    collection = Collection.new('albatross', 'dog', 'horse')
 
-    assert_equal("albatross", collection.max_by { |a| a.length })
-    assert_equal("horse", collection.max_by { |a| a })
+    assert_equal 'albatross', collection.max_by(&:length)
+    assert_equal('horse', collection.max_by { |a| a })
     assert_equal true, collection.max_by.is_a?(Enumerator)
   end
 
@@ -181,7 +177,7 @@ class SolutionTest < Minitest::Test
   def test_take_while
     collection = Collection.new(*1..6)
 
-    assert_equal [1, 2, 3], collection.take_while { |e| e < 4}
+    assert_equal [1, 2, 3], collection.take_while { |e| e < 4 }
     assert_equal true, collection.take_while.is_a?(Enumerator)
   end
 
@@ -191,28 +187,27 @@ class SolutionTest < Minitest::Test
     assert_equal [4, 5, 6], collection.drop(3)
     assert_equal [], collection.drop(8)
   end
- 
+
   def test_drop_while
     collection = Collection.new(*1..6)
 
-    assert_equal [4, 5, 6], collection.drop_while { |e| e < 4}
+    assert_equal [4, 5, 6], collection.drop_while { |e| e < 4 }
     assert_equal true, collection.drop_while.is_a?(Enumerator)
   end
 
   def test_minmax
-    collection = Collection.new("albatross", "dog", "horse")
+    collection = Collection.new('albatross', 'dog', 'horse')
 
-    assert_equal ["dog", "albatross"], collection.minmax { |x, y| x.length <=> y.length }
-    assert_equal ["albatross", "horse"], collection.minmax
+    assert_equal %w(dog albatross), \
+                 collection.minmax { |x, y| x.length <=> y.length }
+    assert_equal %w(albatross horse), collection.minmax
   end
 
   def test_minmax_by
-    collection = Collection.new("albatross", "dog", "horse")
+    collection = Collection.new('albatross', 'dog', 'horse')
 
-    assert_equal ["dog", "albatross"], collection.minmax_by { |x| x.length }
-    assert_equal ["albatross", "horse"], collection.minmax_by { |x| x }
+    assert_equal %w(dog albatross), collection.minmax_by(&:length)
+    assert_equal %w(albatross horse), collection.minmax_by { |x| x }
     assert_equal true, collection.minmax_by.is_a?(Enumerator)
   end
-
 end
-
