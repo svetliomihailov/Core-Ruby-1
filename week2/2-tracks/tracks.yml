@@ -1,0 +1,17 @@
+one:
+  artist: "KAYTRANADA feat. Shay Lia"
+  name:   "Leave me alone"
+  album:  "So Bad"
+  genre:  "Dance"
+
+two:
+  artist: "Iron Maiden"
+  name:   "The numnber of the beast"
+  album:  "The numnber of the beast"
+  genre:  "heavy metal"
+
+three:
+  artist: "Metallica"
+  name:   "Nothing else matters"
+  album:  "Metallica"
+  genre:  "power ballad"
