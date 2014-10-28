@@ -3,11 +3,22 @@ class Vector
 
   def initialize(*args)
     @components, @dimension = [], 0
-    args.each do |e|
+    args.flatten.each do |e|
       fail 'Ilegal Argument' unless e.is_a? Numeric
       @components << e.to_f
       @dimension += 1
     end
+  end
+
+  def length
+    Math.sqrt @components.map { |e| e**2 }.reduce(:+)
+  end
+
+  alias_method :magnitude, :length
+
+  def normalize
+    len = length
+    Vector.new @components.map { |e| e / len }
   end
 
   def ==(other)
@@ -21,7 +32,7 @@ class Vector
   def +(other)
     if other.is_a? Numeric
       Vector.new(*@components.map { |e| e + other })
-    elsif other.is_a? Vector
+    elsif other.instance_of? Vector
       fail 'Illegal Argument' unless @dimension == other.dimension
       Vector.new(*@components.zip(other.components).map { |x, y| y + x })
     else
@@ -32,7 +43,7 @@ class Vector
   def -(other)
     if other.is_a? Numeric
       Vector.new(*@components.map { |e| e - other })
-    elsif other.is_a? Vector
+    elsif other.instance_of? Vector
       fail 'Illegal Argument' unless @dimension == other.dimension
       Vector.new(*@components.zip(other.components).map { |x, y| x - y })
     else
@@ -56,14 +67,16 @@ class Vector
     end
   end
 
-  def [](i)
-    fail IndexError unless i < @dimension && i >= 0
-    @components[i]
+  def [](index)
+    fail IndexError if index >= @dimension && index >= 0
+    fail IndexError if index < -@dimension && index < 0
+    @components[index]
   end
 
-  def []=(i, value)
-    fail IndexError unless i < @dimension && i >= 0
-    @components[i] = value
+  def []=(index, value)
+    fail IndexError if index >= @dimension && index >= 0
+    fail IndexError if index < -@dimension && index < 0
+    @components[index] = value
   end
 
   def +@
@@ -88,9 +101,7 @@ end
 
 class Vector2D < Vector
   def initialize(x, y)
-    @components, @dimension = [], 2
-    @components << x.to_f
-    @components << y.to_f
+    super
   end
 
   def x
@@ -124,10 +135,7 @@ end
 
 class Vector3D < Vector
   def initialize(x, y, z)
-    @components, @dimension = [], 3
-    @components << x.to_f
-    @components << y.to_f
-    @components << z.to_f
+    super
   end
 
   def x

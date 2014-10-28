@@ -11,6 +11,10 @@ class SolutionTest < Minitest::Test
     assert_equal false, Vector.new(1, 2, 3, 4) == 'Vector'
   end
 
+  def test_vector_create
+    assert_equal Vector.new(1, 2, 3, 4, 5), Vector.new(1, [2, 3], [4, 5])
+  end
+
   def test_vector_addition
     assert_equal Vector.new(3, 4, 5, 6, 7), Vector.new(1, 2, 3, 4, 5) + 2
     assert_raises(RuntimeError) do
@@ -22,6 +26,20 @@ class SolutionTest < Minitest::Test
     end
     assert_equal Vector.new(3, 4, 5, 6, 7), \
                  Vector.new(1, 2, 3, 4, 5) + Vector.new(2, 2, 2, 2, 2)
+  end
+
+  def test_vector_length
+    v = Vector.new 1, 1
+
+    assert_equal Math.sqrt(2), v.length
+    assert_equal Math.sqrt(2), v.magnitude
+  end
+
+  def test_normalize
+    v = Vector.new 1, 1
+    l = Math.sqrt 2
+
+    assert_equal Vector.new(1 / l, 1 / l), v.normalize
   end
 
   def test_vector_substraction
@@ -56,7 +74,9 @@ class SolutionTest < Minitest::Test
     assert_equal 2, v[1]
     assert_equal 5, v[4]
     assert_raises(IndexError) { v[5] }
-    assert_raises(IndexError) { v[-1] }
+    assert_equal 5, v[-1]
+    assert_equal 1, v[-5]
+    assert_raises(IndexError) { v[-6] }
   end
 
   def test_vector_index_with_assign
@@ -64,7 +84,8 @@ class SolutionTest < Minitest::Test
     assert_equal 3, v[2]
     assert_equal 1, v[2] = 1
     assert_equal 1, v[2]
-    assert_raises(IndexError) { v[-1] = 5 }
+    assert_equal 5, v[-1] = 5
+    assert_raises(IndexError) { v[-6] = 1 }
   end
 
   def test_vector_unary_minus
