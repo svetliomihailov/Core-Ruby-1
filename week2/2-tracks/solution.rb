@@ -23,4 +23,5 @@ They may be formated as a hash or as 4 separate arguments in that order")
 end
 
 class Playlist
+  
 end

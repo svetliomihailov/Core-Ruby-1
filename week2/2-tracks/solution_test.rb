@@ -20,6 +20,5 @@ class SolutionTest < Minitest::Test
                         genre: "Dance"
 
     track_3 = Track.new @config["two"]
-    track_4 = Track.new "ba'", "wa"
   end
 end
