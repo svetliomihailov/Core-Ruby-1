@@ -76,19 +76,19 @@ class Playlist
   end
 
   def find_by_name(name)
-    # Filter the playlist by a block. Should return a new Playlist.
+    # Finds all the tracks by the name
   end
 
   def find_by_artist(artist)
-    # Finds all the tracks by the artist
+    # Finds all the tracks by the artist. Should return a new Playlist.
   end
 
   def find_by_album(album)
-    # Finds all the tracks from the album.
+    # Finds all the tracks from the album. Should return a new Playlist.
   end
 
   def find_by_genre(genre)
-    # Finds all the tracks by genre.
+    # Finds all the tracks by genre. Should return a new Playlist.
   end
 
   def shuffle
@@ -141,7 +141,7 @@ class AwesomeRockFilter
   AWESOME_ARTISTS = %w(Led\ Zeppellin The\ Doors Black\ Sabbath)
 
   def call(track)
-    AWESOME_ARTIST.include? track.artist
+    AWESOME_ARTISTS.include? track.artist
   end
 end
 
