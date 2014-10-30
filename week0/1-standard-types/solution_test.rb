@@ -43,13 +43,14 @@ class SolutionTest < Minitest::Unit::TestCase
 
   def test_remove_suffix
     assert_equal \
-      'listen very very ', remove_suffix('listen very very silently', 'silently')
+      'listen very very ', \
+      remove_suffix('listen very very silently', 'silently')
     assert_equal \
       'listen extremely ', remove_suffix('listen extremely closely', 'closely')
   end
 
   def test_digits
-    assert_equal [1, 2, 3], digits(123) 
+    assert_equal [1, 2, 3], digits(123)
     assert_equal [6, 1, 5, 2, 3], digits(615_23)
     assert_equal [9, 8, 8, 2], digits(988_2)
   end
@@ -58,15 +59,16 @@ class SolutionTest < Minitest::Unit::TestCase
     assert_equal [1, 2, :fizz, 4, :buzz, :fizz, 7], fizzbuzz(1..7)
     assert_equal [:fizz, 13, 14, :fizz_buzz, 16, 17, :fizz], fizzbuzz(12..18)
   end
-  
+
   def test_count
-     assert_equal count(['a', 2, 3]), 'a' => 1, 2 => 1, 3 => 1
-     assert_equal count(['a', 2, 3, 2]), 'a' => 1, 2 => 2, 3 => 1
+    assert_equal count(['a', 2, 3]), 'a' => 1, 2 => 1, 3 => 1
+    assert_equal count(['a', 2, 3, 2]), 'a' => 1, 2 => 2, 3 => 1
   end
-  
+
   def test_word_count
-  assert_equal count_words("bla bla 'bla drun', da", "uga buga  dwa. dwadaw"), \
-    "bla"=>3, "drun"=>1, "da"=>1, "uga"=>1, "buga"=>1, "dwa"=>1, "dwadaw"=>1
+    assert_equal \
+    count_words('bla bla \'bla drun\', da\', \'uga buga  dwa. dwadaw'), \
+    'bla' => 3, 'drun' => 1, 'da' => 1, 'uga' => 1, 'buga' => 1, \
+    'dwa' => 1, 'dwadaw' => 1
   end
-  
 end

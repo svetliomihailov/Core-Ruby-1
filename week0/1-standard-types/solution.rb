@@ -73,7 +73,7 @@ end
 
 def count_words(*sentences)
   words = {}
-  sentences.each do | sentence |     
+  sentences.each do | sentence |
     many_words = sentence.split(/\W+/)
     many_words.each do | e |
       words.key?(e)  ? words[e] += 1 : words[e] = 1

@@ -22,7 +22,7 @@ class SolutionTest < Minitest::Test
               'So Bad', 'Dance'
   end
 
-  def test_track_methods
+  def test_track_methods_respond
     tr = new_track
     assert_respond_to tr, :artist
     assert_respond_to tr, :name
@@ -34,8 +34,14 @@ class SolutionTest < Minitest::Test
     assert_respond_to tr, :genre=
   end
 
+  def test_track_equal
+    assert_equal true, new_track == Track.new('KAYTRANADA feat. Shay Lia', \
+                                              'Leave me alone', \
+                                              'So Bad', 'Dance')
+  end
+
   def test_playlist_create
-    assert_raises(TypeError) { Playlist.new "bla" }
+    assert_raises(TypeError) { Playlist.new 'bla' }
   end
 
   def test_playlist_each
@@ -52,12 +58,66 @@ class SolutionTest < Minitest::Test
   end
 
   def test_playlist_find
-    pl = Playlist.from_yaml('tracks.yml')
-
-    pl2 = pl.find do |e| 
-      e.artist.include?('Metallica')
+    cnt, pl = 0, Playlist.from_yaml('tracks.yml')
+    pl2 = pl.find { |e| e.artist.include?('Metallica') }
+    pl2.each do |e|
+      assert_equal 'Metallica', e.artist
+      cnt += 1
     end
-    
-    pl2.each { |e| assert_equal 'Metallica', e.artist }
+    assert_equal 2, cnt
+  end
+
+  def test_playlist_find_by_name
+    cnt, pl = 0, Playlist.from_yaml('tracks.yml')
+    pl2 = pl.find_by_name('Numb')
+    pl2.each do |e|
+      assert_equal 'Numb', e.name
+      cnt += 1
+    end
+    assert_equal 1, cnt
+  end
+
+  def test_playlist_find_by_artist
+    cnt, pl = 0, Playlist.from_yaml('tracks.yml')
+    pl2 = pl.find_by_artist('Metallica')
+    pl2.each do |e|
+      assert_equal 'Metallica', e.artist
+      cnt += 1
+    end
+    assert_equal 2, cnt
+  end
+
+  def test_playlist_find_by_album
+    cnt, pl = 0, Playlist.from_yaml('tracks.yml')
+    pl2 = pl.find_by_album('...And Justice for All')
+    pl2.each do |e|
+      assert_equal '...And Justice for All', e.album
+      cnt += 1
+    end
+    assert_equal 1, cnt
+  end
+
+  def test_playlist_find_by_genre
+    cnt, pl = 0, Playlist.from_yaml('tracks.yml')
+    pl2 = pl.find_by_genre('power ballad')
+    pl2.each do |e|
+      assert_equal 'power ballad', e.genre
+      cnt += 1
+    end
+    assert_equal 1, cnt
+  end
+
+  def test_playlist_random
+    pl = Playlist.from_yaml('tracks.yml')
+    tr = pl.random
+    tr2 = pl.random
+    assert_equal true, tr.instance_of?(Track)
+    assert_equal true, tr2.instance_of?(Track)
+  end
+
+  def test_playlist_shuffle
+    pl = Playlist.from_yaml('tracks.yml')
+    pl2 = pl.shuffle
+    assert_equal false, pl == pl2
   end
 end

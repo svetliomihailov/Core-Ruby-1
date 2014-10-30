@@ -7,10 +7,9 @@ class Track
     if args.length == 4
       @artist, @name, @album, @genre = args[0], args[1], args[2], args[3]
     elsif args.length == 1
-      # TODO: this will be changed when the HashWithIndifferentAccess is made!
       fail ArgumentError, 'Hash with artist, name, album and genre required' \
         unless args[0].instance_of? Hash
-      @artist = args[0][:artist] ? args[0][:artist] : args[0]['artist'] 
+      @artist = args[0][:artist] ? args[0][:artist] : args[0]['artist']
       @name = args[0][:name] ? args[0][:artist] : args[0]['name']
       @album = args[0][:albun] ? args[0][:artist] : args[0]['album']
       @genre = args[0][:genre] ? args[0][:artist] : args[0]['genre']
@@ -18,13 +17,23 @@ class Track
       fail ArgumentError, 'You need to provide artist, name, album and genre.'
     end
   end
+
+  def to_s
+    "Title:    #{@name}\nArtist:   #{@artist}\n" + \
+    "Album:    #{@album}\nGenre:    #{@genre}"
+  end
+
+  def ==(other)
+    @artist == other.artist && @name == other.name && \
+    @album == other.album && @genre == other.genre
+  end
 end
 
 class Playlist
   def self.from_yaml(path)
     tracks = []
     new_tracks = YAML.load_file(path)
-    new_tracks.each { |_k, v| tracks << Track.new(v) }
+    new_tracks.each { |e| tracks << Track.new(e) }
     Playlist.new tracks
   end
 
@@ -58,35 +67,27 @@ class Playlist
   end
 
   def find_by_name(name)
-    f_tracks = []
-    @tracks.each { |e| f_tracks << e if e.name.include?(name) } 
-    Playlist.new f_tracks
+    Playlist.new @tracks.select { |e| e.name.include?(name) }
   end
 
   def find_by_artist(artist)
-    f_tracks = []
-    @tracks.each { |e| f_tracks << e if e.artist.include?(artist) } 
-    Playlist.new f_tracks
+    Playlist.new @tracks.select { |e| e.artist.include?(artist) }
   end
 
   def find_by_album(album)
-    f_tracks = []
-    @tracks.each { |e| f_tracks << e if e.album.include?(album) } 
-    Playlist.new f_tracks
+    Playlist.new @tracks.select { |e| e.album.include?(album) }
   end
 
   def find_by_genre(genre)
-    f_tracks = []
-    @tracks.each { |e| f_tracks << e if e.genre.include?(genre) } 
-    Playlist.new f_tracks
+    Playlist.new @tracks.select { |e| e.genre.include?(genre) }
   end
 
   def shuffle
-    # Give me a new playlist that shuffles the tracks of the current one.
+    Playlist.new @tracks.shuffle
   end
 
   def random
-    # Give me a random track.
+    @tracks[Random.rand(@tracks.length)]
   end
 
   def to_s
