@@ -4,7 +4,7 @@ class Vector
   def initialize(*args)
     @components, @dimension = [], 0
     args.flatten.each do |e|
-      fail 'Ilegal Argument' unless e.is_a? Numeric
+      fail ArgumentError, 'Ilegal Argument' unless e.is_a? Numeric
       @components << e.to_f
       @dimension += 1
     end
@@ -33,10 +33,10 @@ class Vector
     if other.is_a? Numeric
       Vector.new(*@components.map { |e| e + other })
     elsif other.instance_of? Vector
-      fail 'Illegal Argument' unless @dimension == other.dimension
+      fail ArgumentError, 'Illegal Argument' unless @dimension == other.dimension
       Vector.new(*@components.zip(other.components).map { |x, y| y + x })
     else
-      fail 'Illegal Argument'
+      fail ArgumentError, 'Illegal Argument'
     end
   end
 
@@ -44,10 +44,10 @@ class Vector
     if other.is_a? Numeric
       Vector.new(*@components.map { |e| e - other })
     elsif other.instance_of? Vector
-      fail 'Illegal Argument' unless @dimension == other.dimension
+      fail ArgumentError, 'Illegal Argument' unless @dimension == other.dimension
       Vector.new(*@components.zip(other.components).map { |x, y| x - y })
     else
-      fail 'Illegal Argument'
+      fail ArgumentError, 'Illegal Argument'
     end
   end
 
@@ -55,7 +55,7 @@ class Vector
     if other.is_a? Numeric
       Vector.new(*@components.map { |e| e * other })
     else
-      fail 'Illegal Argument'
+      fail ArgumentError, 'Illegal Argument'
     end
   end
 
@@ -63,7 +63,7 @@ class Vector
     if other.is_a? Numeric
       Vector.new(*@components.map { |e| e / other })
     else
-      fail 'Illegal Argument'
+      fail ArgumentError, 'Illegal Argument'
     end
   end
 

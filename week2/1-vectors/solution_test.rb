@@ -17,10 +17,10 @@ class SolutionTest < Minitest::Test
 
   def test_vector_addition
     assert_equal Vector.new(3, 4, 5, 6, 7), Vector.new(1, 2, 3, 4, 5) + 2
-    assert_raises(RuntimeError) do
+    assert_raises(ArgumentError) do
       assert_equal Vector.new(3, 4), Vector.new(1, 2) + 'Vector'
     end
-    assert_raises(RuntimeError) do
+    assert_raises(ArgumentError) do
       assert_equal Vector.new(3, 4, 5, 6, 7), \
                    Vector.new(1, 2, 3, 4, 5) + Vector.new(1, 2)
     end
@@ -44,10 +44,10 @@ class SolutionTest < Minitest::Test
 
   def test_vector_substraction
     assert_equal Vector.new(-1, 0, 1, 2, 3), Vector.new(1, 2, 3, 4, 5) - 2
-    assert_raises(RuntimeError) do
+    assert_raises(ArgumentError) do
       assert_equal Vector.new(3, 4), Vector.new(1, 2) - 'Vector'
     end
-    assert_raises(RuntimeError) do
+    assert_raises(ArgumentError) do
       assert_equal Vector.new(3, 4, 5, 6, 7), \
                    Vector.new(1, 2, 3, 4, 5) - Vector.new(1, 2)
     end
@@ -59,14 +59,14 @@ class SolutionTest < Minitest::Test
     v_2 = Vector.new 3, 4, 5, 6
 
     assert_equal Vector.new(6, 8, 10, 12), v_2 * 2
-    assert_raises(RuntimeError) { v_2 * 'String' }
+    assert_raises(ArgumentError) { v_2 * 'String' }
   end
 
   def test_vector_division
     v_2 = Vector.new 3, 4, 5, 6
 
     assert_equal Vector.new(1.5, 2, 2.5, 3), v_2 / 2
-    assert_raises(RuntimeError) { v_2 / 'String' }
+    assert_raises(ArgumentError) { v_2 / 'String' }
   end
 
   def test_vector_index_operator
