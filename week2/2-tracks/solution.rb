@@ -1,5 +1,25 @@
 require 'yaml'
 
+class Hash
+  def with_indifferent_access
+    HashWithIndifferentAccess.new(self)
+  end
+end
+
+class HashWithIndifferentAccess < Hash
+  attr_reader :h
+
+  def initialize(hash)
+    fail ArgumentError, "Only accepts hash tables" unless hash.instance_of?(Hash)
+    @h = {}
+    hash.each do |k, v|
+      ks = k.instance_of?(Symbol) ? k.to_s : k
+      @h.merge! ks => v
+    end 
+  end
+
+end
+
 class Track
   attr_accessor :artist, :name, :album, :genre
 
@@ -27,9 +47,17 @@ class Track
     @artist == other.artist && @name == other.name && \
     @album == other.album && @genre == other.genre
   end
+
+  alias_method :eql?, :==
+
+  def hash
+    (@artist + @name + @album + @genre).hash
+  end
 end
 
 class Playlist
+  attr_reader :tracks
+
   def self.from_yaml(path)
     tracks = []
     new_tracks = YAML.load_file(path)
@@ -54,16 +82,19 @@ class Playlist
   end
 
   def find(&block)
-    f_tracks = []
-    @tracks.each { |e| f_tracks << e if block.call(e) }
-    Playlist.new f_tracks
+    Playlist.new @tracks.select { |e| block.call(e) }
   end
 
   def find_by(*filters)
-    # Filter is any object that responds to the method #call. #call accepts one
-    # argument, the track it should match or not match.
-    #
-    # Should return a new Playlist.
+    new_tracks = []
+    filters.each do |f|
+      if new_tracks.length.zero?
+        new_tracks = @tracks.select { |t| f.call(t) if f.respond_to?(:call) }
+      else
+        new_tracks &= @tracks.select { |t| f.call(t) if f.respond_to?(:call) }
+      end
+    end
+    Playlist.new new_tracks
   end
 
   def find_by_name(name)
@@ -91,19 +122,48 @@ class Playlist
   end
 
   def to_s
-    # It should return a nice tabular representation of all the tracks.
-    # Checkout the String method for something that can help you with that.
+    s = ''
+    @tracks.each { |t| s += t.to_s + "\n\n" }
+    s
   end
 
   def &(other)
-    # Your code goes here. This _should_ return new playlist.
+    fail ArgumentError, 'The argument needs to be of Playlist type' \
+      unless other.instance_of?(Playlist)
+    Playlist.new @tracks & other.tracks
   end
 
   def |(other)
-    # Your code goes here. This _should_ return new playlist.
+    fail ArgumentError, 'The argument needs to be of Playlist type' \
+      unless other.instance_of?(Playlist)
+    Playlist.new @tracks | other.tracks
   end
 
   def -(other)
-    # Your code goes here. This _should_ return new playlist.
+    fail ArgumentError, 'The argument needs to be of Playlist type' \
+      unless other.instance_of?(Playlist)
+    Playlist.new @tracks - other.tracks
+  end
+
+  def ==(other)
+    fail ArgumentError, 'The argument needs to be of Playlist type' \
+      unless other.instance_of?(Playlist)
+    @tracks == other.tracks
+  end
+end
+
+class AwesomeArtistsFilter
+  AWESOME_ARTISTS = %w(Iron\ Maiden Metallica Linkin\ Park)
+
+  def call(track)
+    AWESOME_ARTISTS.include? track.artist
+  end
+end
+
+class AwesomeSongsFilter
+  AWESOME_SONGS = %w(One Nothing\ else\ matters)
+
+  def call(track)
+    AWESOME_SONGS.include? track.name
   end
 end
