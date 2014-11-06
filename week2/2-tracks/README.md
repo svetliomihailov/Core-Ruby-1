@@ -76,7 +76,7 @@ class Playlist
   end
 
   def find_by_name(name)
-    # Finds all the tracks by the name
+    # Finds all the tracks by the name. Should return a new Playlist.
   end
 
   def find_by_artist(artist)
@@ -150,7 +150,7 @@ playlist.find_by AwesomeRockFilter.new
 # Because of the interface, I wanna be able to filter it out with a proc too.
 awesome_rock_filter = proc do |track|
   awesome_artists = %w(Led\ Zeppellin The\ Doors Black\ Sabbath)
-  awesome_artist.include? track.artist
+  awesome_artists.include? track.artist
 end
 
 playlist.find_by awesome_rock_filter
@@ -201,7 +201,7 @@ end
 
 hash = {key1: 1, key2: 2}.with_indifferent_access
 hash[:key1] == hash["key1"]           #=> true
-hash.fetch(:key) == hash.fetch("key") #=> true
+hash.fetch(:key2) == hash.fetch("key2") #=> true
 ```
 
 [Hash#fetch]: http://ruby-doc.org/core-2.1.4/Hash.html#fetch
