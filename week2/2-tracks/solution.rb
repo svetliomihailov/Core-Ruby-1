@@ -10,14 +10,28 @@ class HashWithIndifferentAccess < Hash
   attr_reader :h
 
   def initialize(hash)
-    fail ArgumentError, "Only accepts hash tables" unless hash.instance_of?(Hash)
+    fail ArgumentError, 'Hash tables' unless hash.instance_of?(Hash)
     @h = {}
     hash.each do |k, v|
       ks = k.instance_of?(Symbol) ? k.to_s : k
       @h.merge! ks => v
-    end 
+    end
+    self
   end
 
+  def [](key)
+    @h[key.instance_of?(Symbol) ? key.to_s : key]
+  end
+
+  def []=(key, value)
+    @h[key.instance_of?(Symbol) ? key.to_s : key] = value
+  end
+
+  def ==(other)
+    fail ArgumentError, 'other must be of type HashWithIndifferentAccess' \
+      unless other.instance_of? HashWithIndifferentAccess
+    @h == other.h
+  end
 end
 
 class Track
@@ -28,11 +42,9 @@ class Track
       @artist, @name, @album, @genre = args[0], args[1], args[2], args[3]
     elsif args.length == 1
       fail ArgumentError, 'Hash with artist, name, album and genre required' \
-        unless args[0].instance_of? Hash
-      @artist = args[0][:artist] ? args[0][:artist] : args[0]['artist']
-      @name = args[0][:name] ? args[0][:artist] : args[0]['name']
-      @album = args[0][:albun] ? args[0][:artist] : args[0]['album']
-      @genre = args[0][:genre] ? args[0][:artist] : args[0]['genre']
+        unless args[0].instance_of? HashWithIndifferentAccess
+      @artist, @name, @album, @genre = \
+        args[0]['artist'], args[0]['name'], args[0]['album'], args[0]['genre']
     else
       fail ArgumentError, 'You need to provide artist, name, album and genre.'
     end
@@ -61,7 +73,7 @@ class Playlist
   def self.from_yaml(path)
     tracks = []
     new_tracks = YAML.load_file(path)
-    new_tracks.each { |e| tracks << Track.new(e) }
+    new_tracks.each { |e| tracks << Track.new(e.with_indifferent_access) }
     Playlist.new tracks
   end
 

@@ -3,27 +3,52 @@ require 'yaml'
 
 require_relative 'solution'
 
-class SolutionTest < Minitest::Test
-  def setup
-    @config = YAML.load_file('tracks.yml')
+class HashWithIndifferentAccessTest < Minitest::Test
+  def test_hwia_creation
+    h = { a: 1, b: 2, c: 3 }
+    hwia = HashWithIndifferentAccess.new h
+    assert_equal hwia.h, 'a' => 1, 'b' => 2, 'c' => 3
   end
 
-  def teardown
-    @config = nil
+  def test_hwia_get_val_via_key
+    h = { a: 1, b: 2, c: 3 }
+    hwia = HashWithIndifferentAccess.new h
+
+    assert_equal 1, hwia[:a]
+    assert_equal 1, hwia['a']
   end
 
-  def test_track_create_with_bad_args
-    assert_raises(ArgumentError) { Track.new 'bla', 'blabla' }
-    assert_raises(ArgumentError) { Track.new 'bla' }
+  def test_hwia_set_val_via_key
+    h = { a: 1, b: 2, c: 3 }
+    hwia = HashWithIndifferentAccess.new h
+
+    hwia['a'] = 6
+    assert_equal 6, hwia[:a]
+    assert_equal 6, hwia['a']
+    hwia[:a] = 10
+    assert_equal 10, hwia[:a]
+    assert_equal 10, hwia['a']
   end
 
+  def test_hwia_equals
+    h = { a: 1, b: 2, c: 3 }
+    hs = { 'a' => 1, 'b' => 2, 'c' => 3 }
+    hwia = HashWithIndifferentAccess.new h
+    hwias = HashWithIndifferentAccess.new hs
+    assert_equal true, hwia == hwias
+    assert_raises(ArgumentError) { hwia == 'String' }
+  end
+end
+
+class TracksTest < Minitest::Test
   def new_track
     Track.new 'KAYTRANADA feat. Shay Lia', 'Leave me alone', \
               'So Bad', 'Dance'
   end
 
-  def new_playlist
-    Playlist.from_yaml('tracks.yml')
+  def test_track_create_with_bad_args
+    assert_raises(ArgumentError) { Track.new 'bla', 'blabla' }
+    assert_raises(ArgumentError) { Track.new 'bla' }
   end
 
   def test_track_methods_respond
@@ -42,6 +67,25 @@ class SolutionTest < Minitest::Test
     assert_equal true, new_track == Track.new('KAYTRANADA feat. Shay Lia', \
                                               'Leave me alone', \
                                               'So Bad', 'Dance')
+  end
+end
+
+class PlaylistTest < Minitest::Test
+  def setup
+    @config = YAML.load_file('tracks.yml')
+  end
+
+  def teardown
+    @config = nil
+  end
+
+  def new_track
+    Track.new 'KAYTRANADA feat. Shay Lia', 'Leave me alone', \
+              'So Bad', 'Dance'
+  end
+
+  def new_playlist
+    Playlist.from_yaml('tracks.yml')
   end
 
   def test_playlist_create
@@ -149,7 +193,7 @@ class SolutionTest < Minitest::Test
     tr = Track.new 'Some artist', 'some song', 'some album', 'some genre'
     other_pl = Playlist.new tr
     tracks = []
-    @config.each { |e| tracks << Track.new(e) }
+    @config.each { |e| tracks << Track.new(e.with_indifferent_access) }
     tracks << tr
     total_pl = Playlist.new tracks
 
@@ -165,12 +209,6 @@ class SolutionTest < Minitest::Test
                     'thrash metal, speed metal'
     test_pl = Playlist.new tr1, tr2
     assert_equal pl2, test_pl
-  end
-
-  def test_hwia_creation
-    h = { a: 1, b: 2, c: 3 }
-    hwia = HashWithIndifferentAccess.new h
-    assert_equal hwia.h, { "a" => 1, "b" => 2, "c" => 3 }
   end
 
   def playlist_to_s
