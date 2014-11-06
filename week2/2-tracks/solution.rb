@@ -10,7 +10,7 @@ class HashWithIndifferentAccess < Hash
   attr_reader :h
 
   def initialize(hash)
-    fail ArgumentError, 'Hash tables' unless hash.instance_of?(Hash)
+    fail ArgumentError, 'Hash table needed' unless hash.instance_of?(Hash)
     @h = {}
     hash.each do |k, v|
       ks = k.instance_of?(Symbol) ? k.to_s : k
@@ -68,8 +68,6 @@ class Track
 end
 
 class Playlist
-  attr_reader :tracks
-
   def self.from_yaml(path)
     tracks = []
     new_tracks = YAML.load_file(path)
@@ -89,8 +87,14 @@ class Playlist
     if block_given?
       @tracks.each { |e| yield e }
     else
-      return @traks.enum_for(:each) { size }
+      return @tracks.enum_for(:each) { size }
     end
+  end
+
+  def ==(other)
+    fail ArgumentError, 'The argument needs to be of Playlist type' \
+      unless other.instance_of?(Playlist)
+    @tracks == other.each.to_a
   end
 
   def find(&block)
@@ -142,25 +146,19 @@ class Playlist
   def &(other)
     fail ArgumentError, 'The argument needs to be of Playlist type' \
       unless other.instance_of?(Playlist)
-    Playlist.new @tracks & other.tracks
+    Playlist.new @tracks & other.each.to_a
   end
 
   def |(other)
     fail ArgumentError, 'The argument needs to be of Playlist type' \
       unless other.instance_of?(Playlist)
-    Playlist.new @tracks | other.tracks
+    Playlist.new @tracks | other.each.to_a
   end
 
   def -(other)
     fail ArgumentError, 'The argument needs to be of Playlist type' \
       unless other.instance_of?(Playlist)
-    Playlist.new @tracks - other.tracks
-  end
-
-  def ==(other)
-    fail ArgumentError, 'The argument needs to be of Playlist type' \
-      unless other.instance_of?(Playlist)
-    @tracks == other.tracks
+    Playlist.new @tracks - other.each.to_a
   end
 end
 

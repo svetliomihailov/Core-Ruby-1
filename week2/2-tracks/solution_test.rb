@@ -97,6 +97,12 @@ class PlaylistTest < Minitest::Test
     assert_equal true, pl.each.is_a?(Enumerator)
   end
 
+  def test_playlist_equal
+    pl = Playlist.new new_track, new_track
+    pl_2 = Playlist.new new_track, new_track
+    assert_equal true, pl == pl_2
+  end
+
   def test_playlist_load_from_yaml
     pl = Playlist.from_yaml('tracks.yml')
     pl.each do |tr|
