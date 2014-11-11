@@ -67,7 +67,9 @@ class BoardClassTest < Minitest::Test
   end
 
   def test_board_next_generation
-    b = new_board
-    b.cell_lives? Cell.new(0, 1)
+    ib = Board.new [0, 0], [0, 1], [1, 0]
+    tb = Board.new [0, 0], [0, 1], [1, 0], [1, 1]
+    rb = ib.next_generation
+    assert_equal true, rb == tb
   end
 end

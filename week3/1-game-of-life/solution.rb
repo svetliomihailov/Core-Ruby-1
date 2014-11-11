@@ -26,48 +26,60 @@ module GameOfLife
     end
 
     def next_generation
-      # Returns new Board with the living cells
+      alive_cells = next_gen_alive_cells
+      dead_cells = all_dead_neighbouts
+      dead_cells.each { |e| alive_cells << e if cell_reincarnates?(e) }
+      Board.new(*alive_cells.map { |e| [e.x, e.y] })
     end
 
-    def cell_dies?(cell)
-      cnt = cell_neighbours cell
-      return false if cnt == 2 || cnt == 3
-      true
+    def hash
+      @b.hash
+    end
+
+    def ==(other)
+      hash == other.hash
+    end
+
+    def to_s
+      # TODO: for later..
+    end
+
+    private
+
+    def all_dead_neighbouts
+      dead_cells = []
+      @b.each { |k, _v| dead_cells |= neighbours(k) }
+      dead_cells
+    end
+
+    def next_gen_alive_cells
+      alive_cells = []
+      @b.each_key { |k| alive_cells << k if cell_lives?(k) }
+      alive_cells
+    end
+
+    def neighbours(cell)
+      [Cell.new(cell.x, cell.y + 1), Cell.new(cell.x, cell.y - 1), \
+       Cell.new(cell.x + 1, cell.y + 1), Cell.new(cell.x + 1, cell.y), \
+       Cell.new(cell.x + 1, cell.y - 1), Cell.new(cell.x - 1, cell.y + 1), \
+       Cell.new(cell.x - 1, cell.y), Cell.new(cell.x - 1, cell.y - 1)]
+    end
+
+    def alive_neighbours(cell)
+      a = 0
+      neighbours(cell).each { |e| a += 1 if @b.key?(e) }
+      a
     end
 
     def cell_lives?(cell)
-      cnt = cell_neighbours cell
+      cnt = alive_neighbours cell
       return true if cnt == 2 || cnt == 3
       false
-    end 
-
-    private
-    
-    def this_cell_clumn(cell)
-      cnt = 0
-      cnt += 1 if @b.key? Cell.new(cell.x, cell.y + 1)
-      cnt += 1 if @b.key? Cell.new(cell.x, cell.y - 1)
-      cnt
     end
 
-    def right_cell_column(cell)
-      cnt = 0
-      cnt += 1 if @b.key? Cell.new(cell.x + 1, cell.y + 1)
-      cnt += 1 if @b.key? Cell.new(cell.x + 1, cell.y)
-      cnt += 1 if @b.key? Cell.new(cell.x + 1, cell.y - 1)
-      cnt
-    end
-
-    def left_cell_column(cell)
-      cnt = 0
-      cnt += 1 if @b.key? Cell.new(cell.x - 1, cell.y + 1)
-      cnt += 1 if @b.key? Cell.new(cell.x - 1, cell.y)
-      cnt += 1 if @b.key? Cell.new(cell.x - 1, cell.y - 1)
-      cnt
-    end
-
-    def cell_neighbours(cell)
-      left_cell_column(cell) + right_cell_column(cell) + this_cell_clumn(cell)
+    def cell_reincarnates?(cell)
+      return true if alive_neighbours(cell) == 3
+      false
     end
   end
 
