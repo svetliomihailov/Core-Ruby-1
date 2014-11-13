@@ -72,4 +72,16 @@ class BoardClassTest < Minitest::Test
     rb = ib.next_generation
     assert_equal true, rb == tb
   end
+
+  def test_baord_display
+    b = GameOfLife::Board.new [0, 0], [0, 1], [1, 0], [1, 2]
+    i = 0
+    while i < 4
+      c = b
+      puts "\nGeneration #{i}"
+      c.display_board
+      b = c.next_generation
+      i += 1
+    end
+  end
 end

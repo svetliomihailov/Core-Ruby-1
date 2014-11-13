@@ -40,8 +40,9 @@ module GameOfLife
       hash == other.hash
     end
 
-    def to_s
-      # TODO: for later..
+    def display_board
+      board = fill_display_array create_display_array
+      draw_display_array board
     end
 
     private
@@ -80,6 +81,34 @@ module GameOfLife
     def cell_reincarnates?(cell)
       return true if alive_neighbours(cell) == 3
       false
+    end
+
+    def create_display_array
+      row, col = 0, 0
+      @b.each_key do |e|
+        col = e.x if e.x >= col
+        row = e.y if e.y >= row
+      end
+      Array.new(row + 1) { Array.new(col + 1) }
+    end
+
+    def fill_display_array(array)
+      ar = array.map { |e| e.fill('x') }
+      @b.each_key { |e| ar[e.y][e.x] = 'O' }
+      ar
+    end
+
+    def draw_display_array(array)
+      i = array.length - 1
+      while i > -1
+        j = 0
+        while j < array[0].length
+          print "#{array[i][j]} "
+          j += 1
+        end
+        print "\n"
+        i -= 1
+      end
     end
   end
 
