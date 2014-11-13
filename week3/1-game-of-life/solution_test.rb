@@ -76,12 +76,13 @@ class BoardClassTest < Minitest::Test
   def test_baord_display
     b = GameOfLife::Board.new [0, 0], [0, 1], [1, 0], [1, 2]
     i = 0
-    while i < 4
-      c = b
+    while i < 10
+      # system('cls')
       puts "\nGeneration #{i}"
-      c.display_board
-      b = c.next_generation
+      b.display_board
+      b = b.next_generation
       i += 1
+      # sleep(2)
     end
   end
 end

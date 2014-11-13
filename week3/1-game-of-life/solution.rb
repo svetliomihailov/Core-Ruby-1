@@ -82,19 +82,35 @@ module GameOfLife
       return true if alive_neighbours(cell) == 3
       false
     end
+# Displat help functions - may be make a separate class for displaying..
+    def row_offset
+      @row_offset = 0
+      @b.each_key do |e|
+        @row_offset = e.y.abs if e.y.abs > @row_offset if e.y < 0
+      end
+      @row_offset
+    end
+
+    def col_offset
+      @col_offset = 0
+      @b.each_key do |e|
+        @col_offset = e.x.abs if e.x.abs > @col_offset if e.x < 0
+      end
+      @col_offset
+    end
 
     def create_display_array
       row, col = 0, 0
       @b.each_key do |e|
-        col = e.x if e.x >= col
-        row = e.y if e.y >= row
+        col = e.x.abs if e.x.abs >= col
+        row = e.y.abs if e.y.abs >= row
       end
-      Array.new(row + 1) { Array.new(col + 1) }
+      Array.new(row + 1 + row_offset) { Array.new(col + 1 + col_offset) }
     end
 
     def fill_display_array(array)
       ar = array.map { |e| e.fill('x') }
-      @b.each_key { |e| ar[e.y][e.x] = 'O' }
+      @b.each_key { |e| ar[e.y + @row_offset][e.x + @col_offset] = 'O' }
       ar
     end
 
