@@ -82,7 +82,7 @@ module GameOfLife
       return true if alive_neighbours(cell) == 3
       false
     end
-# Displat help functions - may be make a separate class for displaying..
+    # Display help functions - may be make a separate class for displaying..
     def row_offset
       @row_offset = 0
       @b.each_key do |e|
@@ -117,11 +117,7 @@ module GameOfLife
     def draw_display_array(array)
       i = array.length - 1
       while i > -1
-        j = 0
-        while j < array[0].length
-          print "#{array[i][j]} "
-          j += 1
-        end
+        array[i].each { |e| print "#{e} " }
         print "\n"
         i -= 1
       end
