@@ -40,11 +40,6 @@ module GameOfLife
       hash == other.hash
     end
 
-    def display_board
-      board = fill_display_array create_display_array
-      draw_display_array board
-    end
-
     private
 
     def all_dead_neighbouts
@@ -82,46 +77,6 @@ module GameOfLife
       return true if alive_neighbours(cell) == 3
       false
     end
-    # Display help functions - may be make a separate class for displaying..
-    def row_offset
-      @row_offset = 0
-      @b.each_key do |e|
-        @row_offset = e.y.abs if e.y.abs > @row_offset if e.y < 0
-      end
-      @row_offset
-    end
-
-    def col_offset
-      @col_offset = 0
-      @b.each_key do |e|
-        @col_offset = e.x.abs if e.x.abs > @col_offset if e.x < 0
-      end
-      @col_offset
-    end
-
-    def create_display_array
-      row, col = 0, 0
-      @b.each_key do |e|
-        col = e.x.abs if e.x.abs >= col
-        row = e.y.abs if e.y.abs >= row
-      end
-      Array.new(row + 1 + row_offset) { Array.new(col + 1 + col_offset) }
-    end
-
-    def fill_display_array(array)
-      ar = array.map { |e| e.fill('x') }
-      @b.each_key { |e| ar[e.y + @row_offset][e.x + @col_offset] = 'O' }
-      ar
-    end
-
-    def draw_display_array(array)
-      i = array.length - 1
-      while i > -1
-        array[i].each { |e| print "#{e} " }
-        print "\n"
-        i -= 1
-      end
-    end
   end
 
   class Cell
@@ -151,6 +106,86 @@ module GameOfLife
 
     def hash
       @c.hash
+    end
+  end
+
+  class BoardViewer
+    def initialize(board)
+      fail ArgumentError, 'Board object expected' \
+        unless board.instance_of? Board
+      @board = board
+      @dspl_array = create_dspl_array
+    end
+
+    def display_board
+      fill_display_array
+      draw_display_array false
+    end
+
+    def display_board_with_y_axis
+      fill_display_array
+      draw_display_array true
+    end
+
+    private
+
+    def create_dspl_array
+      calculate_display_array_size
+      Array.new(@row + 1 + @row_offset) { Array.new(@col + 1 + @col_offset) }
+    end
+
+    def calculate_display_array_size
+      calculate_array_row
+      calculate_array_col
+      calculate_row_offset
+      calculate_col_offset
+    end
+
+    def calculate_array_row
+      @row = 0
+      @board.each do |e|
+        @row = e.y if e.y >= @row if e.y >= 0
+      end
+    end
+
+    def calculate_array_col
+      @col = 0
+      @board.each do |e|
+        @col = e.x if e.x >= @col if e.x >= 0
+      end
+    end
+
+    def calculate_row_offset
+      @row_offset = 0
+      @board.each do |e|
+        @row_offset = e.y.abs if e.y.abs > @row_offset if e.y < 0
+      end
+      @row_offset
+    end
+
+    def calculate_col_offset
+      @col_offset = 0
+      @board.each do |e|
+        @col_offset = e.x.abs if e.x.abs > @col_offset if e.x < 0
+      end
+      @col_offset
+    end
+
+    def fill_display_array
+      @dspl_array.map! { |e| e.fill('-') }
+      @board.each do |e|
+        @dspl_array[e.y + @row_offset][e.x + @col_offset] = 'O'
+      end
+    end
+
+    def draw_display_array(display_y_axis)
+      i = @dspl_array.length - 1
+      while i > -1
+        printf '%04d ', i - @row_offset if display_y_axis
+        @dspl_array[i].each { |e| print "#{e} " }
+        print "\n"
+        i -= 1
+      end
     end
   end
 end

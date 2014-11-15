@@ -72,18 +72,4 @@ class BoardClassTest < Minitest::Test
     rb = ib.next_generation
     assert_equal true, rb == tb
   end
-
-  # def test_fun_times
-  def fun_times
-    b = GameOfLife::Board.new [0, 0], [0, 1], [1, 0], [1, 2], [2, 2]
-    i = 0
-    loop do
-      system('cls')
-      puts "\nGeneration #{i}"
-      b.display_board
-      b = b.next_generation
-      i += 1
-      sleep(2)
-    end
-  end
 end
