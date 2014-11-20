@@ -111,8 +111,9 @@ module GameOfLife
 
   class BoardViewer
     def initialize(board)
-      fail ArgumentError, 'Board object expected' \
-        unless board.instance_of? Board
+      unless board.instance_of? Board
+        fail ArgumentError, 'Board object expected'
+      end
       @board = board
       @dspl_array = create_dspl_array
     end
