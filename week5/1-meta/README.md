@@ -7,6 +7,10 @@ To exercise our meta programming let's do some problems!
 In older versions of Ruby, there wasn't `Object#singleton_class`. Let's
 implement our own!
 
+## Object#define_singleton_method
+
+While at it, define `Object#define_singleton_method` as well.
+
 ## String#to_proc
 
 Symbol#to_proc wasn't around in older Rubies. It came out of Active Support,
@@ -18,7 +22,7 @@ Bonus:
 Let's make this working:
 
 ```ruby
-[2, 3, 4, 5].map('succ.succ') #=> [4, 5, 6, 7]
+[2, 3, 4, 5].map(&'succ.succ') #=> [4, 5, 6, 7]
 ```
 
 ## Module#private_attr_accessor
