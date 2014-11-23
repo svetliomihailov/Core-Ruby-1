@@ -59,6 +59,9 @@ class DiscountsTest < Minitest::Test
     promo = GetOneFreePromotion.new 4
     discount = promo.discount 22, BigDecimal('1')
     assert_equal BigDecimal('5'), discount
+
+    discount = promo.discount 2, BigDecimal('1')
+    assert_equal BigDecimal('0'), discount
   end
 
   def test_package_promo_creation
@@ -79,6 +82,9 @@ class DiscountsTest < Minitest::Test
     promo = PackagePromotion.new 3 => 20
     discount = promo.discount 4, BigDecimal('1')
     assert_equal BigDecimal('0.60'), discount
+
+    discount = promo.discount 2, BigDecimal('1')
+    assert_equal BigDecimal('0'), discount
   end
 
   def test_threshold_promo_creation
@@ -95,6 +101,8 @@ class DiscountsTest < Minitest::Test
     promo = ThresholdPromotion.new 10 => 50
     discount = promo.discount 20, BigDecimal('1')
     assert_equal BigDecimal('5'), discount
+    discount = promo.discount 9, BigDecimal('1')
+    assert_equal BigDecimal('0'), discount
   end
 
   def test_build_coupon
@@ -213,19 +221,27 @@ class CartTest < Minitest::Test
     assert_equal BigDecimal('27.9'), cart.total
   end
 
-  def test_invoice_print
-    inv = Inventory.new
-    inv.register 'Green Tea', '1.99', get_one_free: 4
-    inv.register 'Red Tea',   '2.49'
-    inv.register 'Earl Grey', '1.49'
-    inv.register_coupon 'TEATIME', percent: 50
+  def new_full_invetory
+    inventory = Inventory.new
+    inventory.register 'Green Tea',    '2.79', get_one_free: 2
+    inventory.register 'Black Coffee', '2.99', package: { 2 => 20 }
+    inventory.register 'Milk',         '1.79', threshold: { 3 => 30 }
+    inventory.register 'Cereal',       '2.49'
+    inventory.register_coupon 'BREAKFAST', percent: 10
+    inventory
+  end
+
+  def test_invoice_from_site
+    inv = new_full_invetory
     cart = inv.new_cart
-    cart.add 'Green Tea', 10
-    cart.add 'Earl Grey', 25
-    cart.add 'Red Tea', 42
-    cart.use 'TEATIME'
-    puts "\n\n\n"
+    cart.add 'Green Tea', 8
+    cart.add 'Black Coffee', 5
+    cart.add 'Milk', 5
+    cart.add 'Cereal', 3
+    cart.use 'BREAKFAST'
+
+    puts "\n\n"
     puts cart.invoice
-    puts "\n\n\n"
+    puts "\n\n"
   end
 end

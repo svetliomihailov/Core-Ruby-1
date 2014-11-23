@@ -52,7 +52,7 @@ module Discounts
     end
 
     def to_s
-      "(get #{@pack_prmo[1]}% off for every #{@pack_prmo[0]})"
+      "(get #{@pack_promo[1]}% off for every #{@pack_promo[0]})"
     end
 
     private
@@ -75,6 +75,7 @@ module Discounts
     end
 
     def discount(product_count, price)
+      return BigDecimal.new '0' if product_count <= @tresh_promo[0]
       disc = (product_count - @tresh_promo[0]) * price * @tresh_promo[1]
       disc / 100
     end
@@ -173,6 +174,63 @@ module Discounts
   end
 end
 
+module Printer
+  def format_sep_line
+    "+----------------------------------------------------+------------+\n"
+  end
+
+  def format_header
+    head = format_sep_line
+    head += format_product_line 'Name', 'qty', 'price'
+    head += format_sep_line
+    head
+  end
+
+  def format_footer(coupon, total)
+    if coupon.nil?
+      footer = format_footer_without_coupon total
+    else
+      footer = format_footer_with_coupon coupon, total
+    end
+    footer
+  end
+
+  def format_footer_with_coupon(coupon, total)
+    footer = format_coupon_line coupon.to_s, coupon.coupon_discount(total)
+    footer += format_sep_line
+    footer +=
+      format_product_line 'TOTAL', '', total - coupon.coupon_discount(total)
+    footer += format_sep_line
+    footer
+  end
+
+  def format_footer_without_coupon(total)
+    footer = format_sep_line
+    footer += format_product_line 'TOTAL', '', total
+    footer += format_sep_line
+    footer
+  end
+
+  def format_product_line(name, qty, price)
+    if price.instance_of? BigDecimal
+      ps = format '%.02f', price
+      format "| %-40s%10s | %10s |\n", name, qty.to_s, ps
+    else
+      format "| %-40s%10s | %10s |\n", name, qty.to_s, price.to_s
+    end
+  end
+
+  def format_promotion_line(promo_name, discount)
+    ps = format '-%.02f', discount
+    format "|      %-45s | %10s |\n", promo_name, ps
+  end
+
+  def format_coupon_line(coupon_s, discount)
+    ps = format '-%.02f', discount
+    format "| %-50s | %10s |\n", coupon_s, ps
+  end
+end
+
 module Store
   class Inventory
     include Discounts
@@ -228,6 +286,8 @@ module Store
   end
 
   class Cart
+    include Printer
+
     def initialize(inventory)
       unless inventory.instance_of? Inventory
         fail ArgumentError, 'Inventory object expected'
@@ -265,52 +325,20 @@ module Store
     end
 
     def invoice
-      invoice = format_sep_line
-      invoice += format_product_line 'Name', 'qty', 'price'
-      invoice += format_sep_line
+      invoice = format_header
       @shop_list.each_value do |i|
         invoice += format_product_line i.pr.name, i.qty, i.total
-        invoice +=
-          format_promotion_line i.pr.promo_to_s, i.pr.promo_discount(i.qty)
+        unless i.pr.promo_discount(i.qty) == BigDecimal.new('0')
+          invoice +=
+            format_promotion_line i.pr.promo_to_s, i.pr.promo_discount(i.qty)
+        end
       end
-      if @coupon.nil?
-        invoice += format_sep_line
-        invoice += format_product_line 'TOTAL', '', total
-      else
-        i = total
-        invoice += format_coupon_line @coupon.to_s, @coupon.coupon_discount(i)
-        invoice += format_sep_line
-        invoice +=
-          format_product_line 'TOTAL', '', i - @coupon.coupon_discount(i)
-      end
-      invoice += format_sep_line
+
+      invoice += format_footer @coupon, total
       invoice
     end
 
     private
-
-    def format_sep_line
-      "+----------------------------------------------------+------------+\n"
-    end
-
-    def format_product_line(name, qty, price)
-      if price.instance_of? BigDecimal
-        ps = format '%.02f', price
-        format "| %-40s%10s | %10s |\n", name, qty.to_s, ps
-      else
-        format "| %-40s%10s | %10s |\n", name, qty.to_s, price.to_s
-      end
-    end
-
-    def format_promotion_line(promo_name, discount)
-      ps = format '-%.02f', discount
-      format "|      %-45s | %10s |\n", promo_name, ps
-    end
-
-    def format_coupon_line(coupon_s, discount)
-      ps = format '-%.02f', discount
-      format "| %-50s | %10s |\n", coupon_s, ps
-    end
 
     def single_item_total(item)
       BigDecimal.new(item.pr.price) * BigDecimal.new(item.qty)
