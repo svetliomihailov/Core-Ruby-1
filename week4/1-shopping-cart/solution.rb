@@ -174,7 +174,7 @@ module Discounts
   end
 end
 
-module Printer
+module Formatter
   def format_sep_line
     "+----------------------------------------------------+------------+\n"
   end
@@ -186,20 +186,11 @@ module Printer
     head
   end
 
-  def format_footer(coupon, total)
-    if coupon.nil?
-      footer = format_footer_without_coupon total
-    else
-      footer = format_footer_with_coupon coupon, total
-    end
-    footer
-  end
-
-  def format_footer_with_coupon(coupon, total)
-    footer = format_coupon_line coupon.to_s, coupon.coupon_discount(total)
+  def format_footer_with_coupon(coupon_s, total, discount)
+    footer = format_coupon_line coupon_s, discount
     footer += format_sep_line
     footer +=
-      format_product_line 'TOTAL', '', total - coupon.coupon_discount(total)
+      format_product_line 'TOTAL', '', total - discount
     footer += format_sep_line
     footer
   end
@@ -286,7 +277,7 @@ module Store
   end
 
   class Cart
-    include Printer
+    include Formatter
 
     def initialize(inventory)
       unless inventory.instance_of? Inventory
@@ -316,12 +307,15 @@ module Store
       end
     end
 
-    def total
-      total = BigDecimal.new '0'
+    def total(with_coupon = true)
+      tot = BigDecimal.new '0'
       @shop_list.each_value do
-        |i| total += i.total - i.pr.promo_discount(i.qty)
+        |i| tot += i.total - i.pr.promo_discount(i.qty)
       end
-      total
+      unless @coupon.nil? || with_coupon == false
+        tot -= @coupon.coupon_discount(tot)
+      end
+      tot
     end
 
     def invoice
@@ -333,12 +327,20 @@ module Store
             format_promotion_line i.pr.promo_to_s, i.pr.promo_discount(i.qty)
         end
       end
-
-      invoice += format_footer @coupon, total
+      invoice += footer
       invoice
     end
 
     private
+
+    def footer
+      if @coupon.nil?
+        format_footer_without_coupon total
+      else
+        i = total false
+        format_footer_with_coupon @coupon.to_s, i, @coupon.coupon_discount(i)
+      end
+    end
 
     def single_item_total(item)
       BigDecimal.new(item.pr.price) * BigDecimal.new(item.qty)
