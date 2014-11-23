@@ -26,6 +26,10 @@ module Discounts
       BigDecimal.new free * price
     end
 
+    def to_s
+      "(buy #{@num}, get 1 free)"
+    end
+
     private
 
     def validate_one_free(one_free)
@@ -43,14 +47,19 @@ module Discounts
 
     def discount(product_count, price)
       n = product_count / @pack_promo[0]
-      disc = BigDecimal.new n * price * @pack_promo[1]
+      disc = BigDecimal.new n * price * @pack_promo[1] * @pack_promo[0]
       disc / 100
+    end
+
+    def to_s
+      "(get #{@pack_prmo[1]}% off for every #{@pack_prmo[0]})"
     end
 
     private
 
     def validate_pack_promo(pack_promo)
       return false unless pack_promo.instance_of? Hash
+      return false unless pack_promo.size == 1
       h = pack_promo.shift
       return true if h[0] > 0 && h[1] > 0 && h[1] < 101
       false
@@ -70,34 +79,111 @@ module Discounts
       disc / 100
     end
 
+    def to_s
+      "(#{@tresh_promo[1]}% off of every after the #{@tresh_promo[0]})"
+    end
+
     private
 
     def validate_tresh_promo(tresh_promo)
       return false unless tresh_promo.instance_of? Hash
+      return false unless tresh_promo.size == 1
       h = tresh_promo.shift
       return true if h[0] > 0 && h[1] > 0 && h[1] < 101
       false
     end
   end
 
-  def build_coupon
+  def build_coupon(name, coupon_arg)
+    unless coupon_arg.instance_of?(Hash) && coupon_arg.size == 1
+      fail ArgumentError, 'Coupon arguments error'
+    end
+
+    a = coupon_arg.shift
+    case a[0]
+    when :percent then return PercentCoupon.new name, a[1]
+    when :amount then return AmountCoupon.new name, a[1]
+    else
+      fail ArgumentError, 'Unknown type of coupon'
+    end
   end
 
   class PercentCoupon
+    attr_reader :name, :percent
+
+    def initialize(name, percent)
+      unless validate_percent percent
+        fail ArgumentError, 'Wrong value for coupon percent'
+      end
+      @name = name
+      @percent = percent
+    end
+
+    def coupon_discount(amount)
+      BigDecimal.new amount * @percent / BigDecimal.new(100)
+    end
+
+    def to_s
+      "Coupon #{@name} - #{@percent}% off"
+    end
+
+    private
+
+    def validate_percent(percent)
+      if percent > 100 || percent < 0
+        false
+      else
+        true
+      end
+    end
   end
 
   class AmountCoupon
+    attr_reader :name, :amount
+
+    def initialize(name, amount)
+      unless validate_amount amount
+        fail ArgumentError, 'Wrong value for coupon amount'
+      end
+      @name = name
+      @amount = amount
+    end
+
+    def coupon_discount(amount)
+      if @amount >= amount
+        BigDecimal.new '0'
+      else
+        BigDecimal.new @amount
+      end
+    end
+
+    def to_s
+      "Coupon #{@name} - #{@amount} off"
+    end
+
+    private
+
+    def validate_amount(amount)
+      if amount < 0
+        false
+      else
+        true
+      end
+    end
   end
 end
 
 module Store
   class Inventory
+    include Discounts
+
     def initialize
       @products = {}
+      @coupons = {}
     end
 
-    def register(name, price)
-      p = Product.new name, price
+    def register(name, price, **promos)
+      p = Product.new name, price, **promos
       if @products.key? p.name
         fail ArgumentError, 'Product already in the inventory'
       end
@@ -112,15 +198,32 @@ module Store
       end
     end
 
-    def register_coupon
+    def each_coupon
+      if block_given?
+        @coupons.each { |_k, v| yield v }
+      else
+        @coupons.enum_for(:each_value) { size }
+      end
+    end
+
+    def register_coupon(name, coupon_arg)
+      c = build_coupon name, coupon_arg
+      if @coupons.key? c.name
+        fail ArgumentError, 'Coupon with that name already ine the inventory'
+      end
+      @coupons.merge! c.name => c
     end
 
     def new_cart
       Cart.new self
     end
 
-    def include?(name)
+    def include_product?(name)
       @products.key? name
+    end
+
+    def include_coupon?(name)
+      @coupons.key? name
     end
   end
 
@@ -134,7 +237,7 @@ module Store
     end
 
     def add(name, count = 1)
-      unless @inv.include? name
+      unless @inv.include_product? name
         fail ArgumentError, 'No such product in the inventory'
       end
       @inv.each_product do |pr|
@@ -142,12 +245,22 @@ module Store
       end
     end
 
-    def use
+    def use(name)
+      unless @inv.include_coupon? name
+        fail ArgumentError, 'No such coupon in the inventry'
+      end
+      fail ArgumentError, 'Only one coupon per cart' unless @coupon.nil?
+
+      @inv.each_coupon do |c|
+        @coupon = c if c.name == name
+      end
     end
 
     def total
       total = BigDecimal.new '0'
-      @shop_list.each_value { |i| total += i.total }
+      @shop_list.each_value do
+        |i| total += i.total - i.pr.promo_discount(i.qty)
+      end
       total
     end
 
@@ -157,9 +270,19 @@ module Store
       invoice += format_sep_line
       @shop_list.each_value do |i|
         invoice += format_product_line i.pr.name, i.qty, i.total
+        invoice +=
+          format_promotion_line i.pr.promo_to_s, i.pr.promo_discount(i.qty)
       end
-      invoice += format_sep_line
-      invoice += format_product_line 'TOTAL', '', total
+      if @coupon.nil?
+        invoice += format_sep_line
+        invoice += format_product_line 'TOTAL', '', total
+      else
+        i = total
+        invoice += format_coupon_line @coupon.to_s, @coupon.coupon_discount(i)
+        invoice += format_sep_line
+        invoice +=
+          format_product_line 'TOTAL', '', i - @coupon.coupon_discount(i)
+      end
       invoice += format_sep_line
       invoice
     end
@@ -179,7 +302,14 @@ module Store
       end
     end
 
-    def format_promotion_line
+    def format_promotion_line(promo_name, discount)
+      ps = format '-%.02f', discount
+      format "|      %-45s | %10s |\n", promo_name, ps
+    end
+
+    def format_coupon_line(coupon_s, discount)
+      ps = format '-%.02f', discount
+      format "| %-50s | %10s |\n", coupon_s, ps
     end
 
     def single_item_total(item)
@@ -236,6 +366,18 @@ module Store
       @price = price.to_d if validate_price(price)
       @name = name if validate_name(name)
       @promo = add_promo(**promos)
+    end
+
+    def promo_discount(count)
+      if @promo.nil?
+        0
+      else
+        @promo.discount count, @price
+      end
+    end
+
+    def promo_to_s
+      @promo.to_s
     end
 
     private

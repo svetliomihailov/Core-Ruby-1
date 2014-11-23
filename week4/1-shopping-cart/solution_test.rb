@@ -55,6 +55,10 @@ class DiscountsTest < Minitest::Test
     promo = GetOneFreePromotion.new 6
     discount = promo.discount 14, BigDecimal('1')
     assert_equal BigDecimal('2'), discount
+
+    promo = GetOneFreePromotion.new 4
+    discount = promo.discount 22, BigDecimal('1')
+    assert_equal BigDecimal('5'), discount
   end
 
   def test_package_promo_creation
@@ -62,6 +66,7 @@ class DiscountsTest < Minitest::Test
     assert_raises(ArgumentError) { PackagePromotion.new 2 => -2 }
     assert_raises(ArgumentError) { PackagePromotion.new 2 => 120 }
     assert_raises(ArgumentError) { PackagePromotion.new 'bla' }
+    assert_raises(ArgumentError) { PackagePromotion.new 3 => 20, 2 => 20 }
     promo = PackagePromotion.new 3 => 20
     assert_equal true, promo.instance_of?(PackagePromotion)
   end
@@ -69,7 +74,11 @@ class DiscountsTest < Minitest::Test
   def test_package_promo_discount
     promo = PackagePromotion.new 2 => 50
     discount = promo.discount 5, BigDecimal('2')
-    assert_equal BigDecimal('2'), discount
+    assert_equal BigDecimal('4'), discount
+
+    promo = PackagePromotion.new 3 => 20
+    discount = promo.discount 4, BigDecimal('1')
+    assert_equal BigDecimal('0.60'), discount
   end
 
   def test_threshold_promo_creation
@@ -77,6 +86,7 @@ class DiscountsTest < Minitest::Test
     assert_raises(ArgumentError) { ThresholdPromotion.new 2 => -2 }
     assert_raises(ArgumentError) { ThresholdPromotion.new 2 => 120 }
     assert_raises(ArgumentError) { ThresholdPromotion.new 'bla' }
+    assert_raises(ArgumentError) { ThresholdPromotion.new 3 => 20, 2 => 20 }
     promo = ThresholdPromotion.new 3 => 20
     assert_equal true, promo.instance_of?(ThresholdPromotion)
   end
@@ -85,6 +95,32 @@ class DiscountsTest < Minitest::Test
     promo = ThresholdPromotion.new 10 => 50
     discount = promo.discount 20, BigDecimal('1')
     assert_equal BigDecimal('5'), discount
+  end
+
+  def test_build_coupon
+    coup = build_coupon 'TeaTime', percent: 20
+    assert_equal true, coup.instance_of?(PercentCoupon)
+
+    coup = build_coupon 'TeaTime2', amount: 45
+    assert_equal true, coup.instance_of?(AmountCoupon)
+
+    assert_raises(ArgumentError) { build_coupon 'TeaTime2', freestuff: 45 }
+    assert_raises(ArgumentError) do
+      build_coupon 'TeaTime2', amount: 45, percent: 20
+    end
+  end
+
+  def test_percent_coupon_creation
+    assert_raises(ArgumentError) { PercentCoupon.new('bla', -1) }
+    assert_raises(ArgumentError) { PercentCoupon.new 'bla', 120 }
+    coup = PercentCoupon.new 'bla', 80
+    assert_equal true, coup.instance_of?(PercentCoupon)
+  end
+
+  def test_amount_coupon_creation
+    assert_raises(ArgumentError) { AmountCoupon.new('bla', -1) }
+    coup = AmountCoupon.new 'bla', 80
+    assert_equal true, coup.instance_of?(AmountCoupon)
   end
 end
 
@@ -105,6 +141,14 @@ class InventoryTest < Minitest::Test
     assert_raises(ArgumentError) { inventory.register 'Earl Grey', '1.49' }
   end
 
+  def test_coupon_register
+    inventory = Inventory.new
+    inventory.register_coupon 'TEATIME', amount: 20
+    assert_raises(ArgumentError) do
+      inventory.register_coupon 'TEATIME', amount: 20
+    end
+  end
+
   def test_each_product
     inventory = Inventory.new
     inventory.register 'Earl Grey', '1.49'
@@ -116,10 +160,19 @@ class InventoryTest < Minitest::Test
     enum.each { |e| assert_equal true, e.instance_of?(Product) }
   end
 
-  def test_include?
+  def test_include_product?
     inv = new_inventory
-    assert_equal true, inv.include?('Earl Grey')
-    assert_equal false, inv.include?('Earl Tea')
+    assert_equal true, inv.include_product?('Earl Grey')
+    assert_equal false, inv.include_product?('Earl Tea')
+  end
+
+  def test_include_coupon
+    inv = new_inventory
+    inv.register_coupon 'Tea time', amount: 50
+    inv.register_coupon 'Breakfast', percent: 50
+    assert_equal true, inv.include_coupon?('Tea time')
+    assert_equal true, inv.include_coupon?('Breakfast')
+    assert_equal false, inv.include_coupon?('Earl Tea')
   end
 end
 
@@ -150,16 +203,27 @@ class CartTest < Minitest::Test
   end
 
   def test_total
-    cart = new_inventory.new_cart
+    inv = new_inventory
+    cart = inv.new_cart
+
     cart.add 'Green Tea', 10
     assert_equal BigDecimal('19.9'), cart.total
+    inv.register 'Bullshit', 1, get_one_free: 4
+    cart.add 'Bullshit', 10
+    assert_equal BigDecimal('27.9'), cart.total
   end
 
   def test_invoice_print
-    cart = new_inventory.new_cart
+    inv = Inventory.new
+    inv.register 'Green Tea', '1.99', get_one_free: 4
+    inv.register 'Red Tea',   '2.49'
+    inv.register 'Earl Grey', '1.49'
+    inv.register_coupon 'TEATIME', percent: 50
+    cart = inv.new_cart
     cart.add 'Green Tea', 10
     cart.add 'Earl Grey', 25
     cart.add 'Red Tea', 42
+    cart.use 'TEATIME'
     puts "\n\n\n"
     puts cart.invoice
     puts "\n\n\n"
