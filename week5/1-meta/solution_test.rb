@@ -8,8 +8,15 @@ class Object
   end
 end
 
-class Bla
-  private_attr_accessor :a
+class TestClass
+  private_attr_accessor :accessor, :accessor_2
+  private_attr_reader :reader
+  private_attr_writer :writer
+
+  cattr_reader :cvar
+  cattr_writer :cvar
+  cattr_accessor :caccessor
+  cattr_accessor(:cdefault) { [1, 2, 3] }
 end
 
 class SolutionTest < Minitest::Test
@@ -34,23 +41,51 @@ class SolutionTest < Minitest::Test
   end
 
   def test_define_singleton_method_with_method
-    a = Object.new.method(:heil)
+    a = Object.new
+    m = Object.new.method(:heil)
     assert_equal false, a.respond_to?(:hello)
-    a.define_singleton_method(:hello, a)
+    a.define_singleton_method(:hello, m)
     assert_equal true, a.respond_to?(:hello)
     assert_raises(NoMethodError) { Object.new.hello }
   end
 
   def test_string_to_proc
-    assert_equal [2, 3, 4, 5].map(&'succ'), [3, 4, 5, 6]
-    assert_equal [2, 3, 4, 5].map(&'succ.succ'), [4, 5, 6, 7]
-    assert_equal [2, 3, 4, 5].map(&'succ.succ.pred'), [3, 4, 5, 6]
+    assert_equal [3, 4, 5, 6], [2, 3, 4, 5].map(&'succ')
+    assert_equal [4, 5, 6, 7], [2, 3, 4, 5].map(&'succ.succ')
+    assert_equal [3, 4, 5, 6], [2, 3, 4, 5].map(&'succ.succ.pred')
+    assert_equal %w(3 4 5 6), [2, 3, 4, 5].map(&'succ.succ.pred.to_s')
   end
 
-  def test_module_private_accessor
-    b = Bla.new
-    p b.a
-    b.a = 2
-    p b.a
+  def test_module_private_accessors
+    b = TestClass.new
+    assert_equal true, b.private_methods.include?(:accessor)
+    assert_equal true, b.private_methods.include?(:accessor=)
+
+    assert_equal true, b.private_methods.include?(:accessor_2)
+    assert_equal true, b.private_methods.include?(:accessor_2=)
+
+    assert_equal true, b.private_methods.include?(:reader)
+    assert_equal false, b.private_methods.include?(:reader=)
+
+    assert_equal true, b.private_methods.include?(:writer=)
+    assert_equal false, b.private_methods.include?(:writer)
+  end
+
+  def test_module_cattr_accessors
+    assert_equal false, TestClass.new.methods.include?(:caccessor)
+    assert_equal false, TestClass.new.methods.include?(:caccessor=)
+    assert_equal true, TestClass.public_methods.include?(:caccessor)
+    assert_equal true, TestClass.public_methods.include?(:caccessor=)
+    assert_equal true, TestClass.public_methods.include?(:cvar)
+    assert_equal true, TestClass.public_methods.include?(:cvar=)
+    assert_equal true, TestClass.public_methods.include?(:cdefault=)
+    assert_equal true, TestClass.public_methods.include?(:cdefault)
+    assert_equal [1, 2, 3], TestClass.cdefault
+  end
+
+  def test_blackhole_object
+    bla = nil
+    assert_equal false, bla.name
+    assert_equal nil, bla.name
   end
 end

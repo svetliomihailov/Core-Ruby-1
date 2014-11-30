@@ -39,10 +39,55 @@ class String
 end
 
 class Module
-  def private_attr_accessor(arg)
-    define_method(arg) { instance_variable_get('@' + arg.to_s) }
-    define_method(arg.to_s + '=') do |val|
-      instance_variable_set('@' + arg.to_s, val)
+  def private_attr_accessor(*args)
+    private_attr_reader(*args)
+    private_attr_writer(*args)
+  end
+
+  def private_attr_reader(*args)
+    args.each do |arg|
+      define_method(arg) { instance_variable_get('@' + arg.to_s) }
+      class_eval { private arg.to_sym }
     end
+  end
+
+  def private_attr_writer(*args)
+    args.each do |arg|
+      met = arg.to_s + '='
+      define_method(met) do |val|
+        instance_variable_set('@' + arg.to_s, val)
+      end
+      class_eval { private met.to_sym }
+    end
+  end
+
+  def cattr_accessor(*args, &block)
+    cattr_writer(*args, &block)
+    cattr_reader(*args)
+  end
+
+  def cattr_reader(*args)
+    args.each do |arg|
+      define_singleton_method(arg) { class_variable_get('@@' + arg.to_s) }
+    end
+  end
+
+  def cattr_writer(*args, &block)
+    args.each do |arg|
+      define_singleton_method(arg.to_s + '=') do |val|
+        class_variable_set('@@' + arg.to_s, val)
+      end
+      send(arg.to_s + '=', block.call) if block_given?
+    end
+  end
+end
+
+class NilClass
+  def method_missing(symbol, *args)
+    nil
+  end
+
+  def respond_to_missing?(symbol, include_all)
+    super
   end
 end
