@@ -83,11 +83,34 @@ class Module
 end
 
 class NilClass
-  def method_missing(symbol, *args)
-    nil
+  def method_missing(_symbol, *_args)
+    self
   end
 
-  def respond_to_missing?(symbol, include_all)
-    super
+  def respond_to_missing?(_symbol, _include_all)
+    true
+  end
+end
+
+class Proxy < BasicObject
+  def initialize(object)
+    @obj = object
+  end
+
+  def method_missing(symbol, *args, &block)
+    @obj.send symbol, *args, &block
+  end
+end
+
+class Object
+  def delegate(*method_names, to:)
+    method_names.each do |method_name|
+      code = <<-EOT
+      def #{method_name}(*args, &block)
+        #{to}.#{method_name} *args, &block
+      end
+      EOT
+      class_eval code
+    end
   end
 end

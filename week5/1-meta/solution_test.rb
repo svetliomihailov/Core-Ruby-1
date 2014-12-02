@@ -19,6 +19,16 @@ class TestClass
   cattr_accessor(:cdefault) { [1, 2, 3] }
 end
 
+User = Struct.new(:first_name, :last_name)
+
+class Invoce
+  delegate :first_name, :last_name, to: '@user'
+
+  def initialize(user)
+    @user = user
+  end
+end
+
 class SolutionTest < Minitest::Test
   def test_singleton_class_wrong_args
     assert_raises(TypeError) { 1.singleton_class }
@@ -85,7 +95,26 @@ class SolutionTest < Minitest::Test
 
   def test_blackhole_object
     bla = nil
-    assert_equal false, bla.name
     assert_equal nil, bla.name
+    assert_equal true, bla.respond_to?(:name)
+  end
+
+  def test_proxy_obj
+    bla = Proxy.new [1, 2, 3, 4, 5]
+
+    assert_equal true, bla.respond_to?(:size)
+    assert_equal true,  bla.respond_to?(:length)
+    assert_equal false,  bla.respond_to?(:nhjnj)
+    assert_equal 1, bla[0]
+    assert_equal [2, 3, 4, 5, 6], bla.map(&:succ)
+    assert_equal [4, 5, 6, 7, 8], bla.map { |e| e + 3 }
+  end
+
+  def test_delegate
+    user = User.new 'Genadi', 'Samokovarov'
+    invoice = Invoce.new(user)
+
+    assert_equal 'Genadi', invoice.first_name
+    assert_equal 'Samokovarov', invoice.last_name
   end
 end
